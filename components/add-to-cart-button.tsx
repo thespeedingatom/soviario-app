@@ -3,7 +3,6 @@
 import { ShoppingCart } from "lucide-react"
 import { NeoButton } from "@/components/ui/neo-button"
 import { useCart } from "@/contexts/cart-context"
-import { trackEvent } from "@/lib/analytics"
 
 interface ProductData {
   id: string
@@ -35,15 +34,6 @@ export default function AddToCartButton({ product, buttonProps }: AddToCartButto
       quantity: 1,
       region: product.region,
       data: product.data,
-    })
-
-    // Track add to cart event
-    trackEvent("add_to_cart", {
-      product_id: product.id,
-      product_name: product.name,
-      value: product.price,
-      currency: "USD",
-      region: product.region || "unknown",
     })
   }
 
