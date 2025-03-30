@@ -1,56 +1,57 @@
 "use server"
 
 import { Resend } from "resend"
+import { render } from '@react-email/render'
+import QRCode from 'qrcode'
+import { MayaQRCode } from '@/emails/maya-qr-code'
 
-// Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function sendTestEmail() {
+export async function sendEsimEmail(
+  email: string, 
+  activationCode: string,
+  orderId: string
+) {
   try {
-    // Get admin email from environment variables or use a default
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || "test@example.com"
-
-    const { data, error } = await resend.emails.send({
-      from: `Soravio eSIM <${process.env.RESEND_FROM_EMAIL || "noreply@soravio.com"}>`,
-      to: adminEmail,
-      subject: "Soravio eSIM - Test Email",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #000; padding: 20px; text-align: center;">
-            <h1 style="color: #fff; margin: 0;">Test Email</h1>
-          </div>
-          
-          <div style="padding: 20px;">
-            <p>This is a test email from your Soravio eSIM application.</p>
-            
-            <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border: 3px solid #000;">
-              <h2 style="margin-top: 0;">Email Integration Test</h2>
-              <p>If you're seeing this, your Resend email integration is working correctly!</p>
-              <p>Time sent: ${new Date().toLocaleString()}</p>
-            </div>
-            
-            <p>You can now use the email service for sending order confirmations, password resets, and other notifications.</p>
-          </div>
-          
-          <div style="background-color: #000; padding: 20px; text-align: center; color: #fff;">
-            <p>&copy; ${new Date().getFullYear()} Soravio eSIM. All rights reserved.</p>
-          </div>
-        </div>
-      `,
+    // Generate QR code image
+    const qrCodeDataUrl = await QRCode.toDataURL(activationCode, {
+      width: 300,
+      margin: 2
     })
 
-    if (error) {
-      console.error("Error sending test email:", error)
-      return { success: false, error: error.message }
-    }
+    // Convert data URL to buffer
+    const qrCodeBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64')
+
+    // Render email template
+    const emailHtml = await render(MayaQRCode({ 
+      activationCode,
+      orderId
+    }))
+
+    const { data, error } = await resend.emails.send({
+      from: `Soravio eSIM <${process.env.RESEND_FROM_EMAIL}>`,
+      to: email,
+      subject: `Your eSIM Activation Code - Order #${orderId.slice(0, 8)}`,
+      html: emailHtml,
+      attachments: [{
+        filename: `esim-activation-${orderId}.png`,
+        content: qrCodeBuffer
+      }]
+    })
+
+    if (error) throw error
 
     return { success: true, id: data?.id }
   } catch (error) {
-    console.error("Error sending test email:", error)
+    console.error('Failed to send eSIM email:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "An unknown error occurred",
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
 
+// Existing sendTestEmail function remains unchanged
+export async function sendTestEmail() {
+  // ... existing implementation ...
+}

@@ -1,13 +1,15 @@
 import { getMayaAuthHeader } from '@/lib/maya-auth'
 
-const MAYA_API_BASE_URL = process.env.MAYA_API_BASE_URL
+const MAYA_API_BASE_URL = 'https://api.maya.net/connectivity/v1/account'
 
 export async function getMayaProducts() {
   try {
     const response = await fetch(`${MAYA_API_BASE_URL}/products`, {
       headers: {
         Authorization: getMayaAuthHeader(),
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Accept-Version': 'v1'
       },
       next: { revalidate: 86400 } // Cache for 24 hours
     })
@@ -28,7 +30,9 @@ export async function getMayaProductById(id: string) {
     const response = await fetch(`${MAYA_API_BASE_URL}/products/${id}`, {
       headers: {
         Authorization: getMayaAuthHeader(),
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Accept-Version': 'v1'
       }
     })
 

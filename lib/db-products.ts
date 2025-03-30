@@ -7,6 +7,7 @@ export type Product = {
   description: string
   price: number
   data_amount: string
+  data_quota_bytes: number
   duration: string
   region: string
   countries: number
@@ -16,13 +17,25 @@ export type Product = {
   updated_at: string
   features?: string[]
   country_list?: string[]
+  wholesale_price: number
+  policy_id: number
+  policy_name: string
+  price_usd: number
+  price_eur: number
+  price_gbp: number
+  price_cad: number
+  price_aud: number
+  price_jpy: number
 }
 
 export async function getAllProducts(): Promise<Product[]> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
 
-    const { data, error } = await supabase.from("products").select("*").order("price")
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("price")
 
     if (error) {
       console.error("Error fetching products:", error)
@@ -38,9 +51,13 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductsByRegion(region: string): Promise<Product[]> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
 
-    const { data, error } = await supabase.from("products").select("*").eq("region", region).order("price")
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("region", region)
+      .order("price")
 
     if (error) {
       console.error(`Error fetching products for region ${region}:`, error)
@@ -56,9 +73,12 @@ export async function getProductsByRegion(region: string): Promise<Product[]> {
 
 export async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
 
-    const { data, error } = await supabase.from("products").select("*").eq("is_featured", true)
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_featured", true)
 
     if (error) {
       console.error("Error fetching featured products:", error)
@@ -74,10 +94,14 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
 
     // Get the product
-    const { data: product, error } = await supabase.from("products").select("*").eq("slug", slug).single()
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .single()
 
     if (error) {
       console.error(`Error fetching product with slug ${slug}:`, error)
@@ -102,7 +126,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       if (featuresError) {
         console.error(`Error fetching features for product ${product.id}:`, featuresError)
       } else if (featuresData) {
-        features = featuresData.map((f) => f.feature)
+        features = featuresData.map((f: { feature: string }) => f.feature)
       }
     } catch (featuresErr) {
       console.error(`Failed to fetch features for product ${product.id}:`, featuresErr)
@@ -118,7 +142,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       if (countriesError) {
         console.error(`Error fetching countries for product ${product.id}:`, countriesError)
       } else if (countriesData) {
-        country_list = countriesData.map((c) => c.country_name)
+        country_list = countriesData.map((c: { country_name: string }) => c.country_name)
       }
     } catch (countriesErr) {
       console.error(`Failed to fetch countries for product ${product.id}:`, countriesErr)
@@ -138,7 +162,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
 export async function getRelatedProducts(region: string, excludeSlug: string): Promise<Product[]> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
 
     const { data, error } = await supabase
       .from("products")
@@ -158,4 +182,3 @@ export async function getRelatedProducts(region: string, excludeSlug: string): P
     return []
   }
 }
-

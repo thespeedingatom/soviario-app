@@ -4,16 +4,33 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Loader2 } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useSearchParams } from "next/navigation"
 import { verifyCheckoutSession } from "@/app/_actions/stripe-actions"
+import { MayaQRCode } from "@/components/maya-qr-code"
 
 export default function CheckoutSuccessPage() {
   const { clearCart } = useCart()
   const [orderId, setOrderId] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [orderDetails, setOrderDetails] = useState<any>(null)
+  interface OrderDetails {
+    paymentStatus: string
+    customerEmail?: string
+    amountTotal: number
+    shippingRegion?: string
+    lineItems?: Array<{
+      productId: string
+      isEsim: boolean
+    }>
+  }
+
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
+  const [esimData, setEsimData] = useState<{
+    esimId: string
+    activationCode: string
+  } | null>(null)
+  const [esimLoading, setEsimLoading] = useState(false)
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
   const orderIdParam = searchParams.get("order_id")
@@ -28,10 +45,13 @@ export default function CheckoutSuccessPage() {
           if (result.paymentStatus === "paid") {
             setOrderId(orderIdParam)
             setOrderDetails(result)
-            // Clear the cart after successful checkout
             clearCart()
+
+            // Check if this is an eSIM product
+            // Temporary - we'll need to modify verifyCheckoutSession to return line items
+            // For now assume all orders are eSIM
+            await createEsim(orderIdParam)
           } else {
-            // Payment not completed
             window.location.href = "/cart?payment_incomplete=true"
           }
         } catch (error) {
@@ -41,8 +61,33 @@ export default function CheckoutSuccessPage() {
           setIsLoading(false)
         }
       } else {
-        // Redirect if no session ID or order ID is present
         window.location.href = "/cart"
+      }
+    }
+
+    async function createEsim(orderId: string) {
+      try {
+        setEsimLoading(true)
+        const response = await fetch('/api/maya/esim', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            orderId,
+            productId: 'default-esim-product', // Temporary placeholder
+            customerEmail: orderDetails?.customerEmail || '',
+            region: orderDetails?.shippingRegion || 'global'
+          })
+        })
+
+        if (!response.ok) throw new Error('Failed to create eSIM')
+        const data = await response.json()
+        setEsimData(data.data)
+      } catch (error) {
+        console.error('eSIM creation failed:', error)
+      } finally {
+        setEsimLoading(false)
       }
     }
 
@@ -78,7 +123,26 @@ export default function CheckoutSuccessPage() {
             </div>
 
             <h1 className="text-3xl font-bold">Order Confirmed!</h1>
-            <p className="mt-4 text-xl">Thank you for your purchase. Your eSIM details have been sent to your email.</p>
+            <p className="mt-4 text-xl">Thank you for your purchase.</p>
+
+            {esimLoading && (
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Preparing your eSIM...</span>
+              </div>
+            )}
+
+            {esimData && (
+              <div className="mt-8 space-y-4">
+                <h2 className="text-xl font-bold">Your eSIM Activation</h2>
+                <div className="rounded-lg bg-muted p-4">
+                  <MayaQRCode activationCode={esimData.activationCode} />
+                  <p className="mt-4 text-sm">
+                    Scan this QR code with your device to activate your eSIM
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 space-y-4">
               <div className="rounded-lg bg-muted p-4">
@@ -95,8 +159,8 @@ export default function CheckoutSuccessPage() {
             </div>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link href="/dashboard/my-esims">
-                <Button className="neobrutalist-button">View My eSIMs</Button>
+              <Link href="/dashboard/orders">
+                <Button className="neobrutalist-button">View My Orders</Button>
               </Link>
               <Link href="/">
                 <Button variant="outline" className="neobrutalist-border">
@@ -110,4 +174,3 @@ export default function CheckoutSuccessPage() {
     </div>
   )
 }
-

@@ -12,19 +12,21 @@ import { createCheckoutSession } from "@/app/_actions/stripe-actions"
 import { toast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { User } from "lucide-react"
 
 export default function CheckoutPage() {
-  const { items, subtotal, discount, clearCart } = useCart()
-  const { user } = useAuth()
+  const { items, subtotal, discount } = useCart()
+  const { user, isPending: authLoading } = useAuth() // Use isPending for loading state
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
 
-  // Redirect to cart if cart is empty
+  // Redirect to cart if cart is empty (wait for auth check)
   useEffect(() => {
-    if (items.length === 0) {
+    if (!authLoading && items.length === 0) {
       router.push("/cart")
     }
 
@@ -32,9 +34,13 @@ export default function CheckoutPage() {
     if (user?.email) {
       setEmail(user.email)
     }
-  }, [items, router, user])
+    // Clear email if user logs out
+    if (!user) {
+      setEmail("")
+    }
+  }, [items, router, user, authLoading])
 
-  const handleStripeCheckout = async (e) => {
+  const handleStripeCheckout = async (e: React.FormEvent) => { // Add type for event
     e.preventDefault()
 
     if (!email || !firstName || !lastName) {
@@ -46,11 +52,21 @@ export default function CheckoutPage() {
       return
     }
 
+    // Ensure user is logged in before proceeding
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in or sign up to complete your purchase.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       setIsLoading(true)
 
-      // Create a Stripe checkout session
-      const { url } = await createCheckoutSession(items, email, discount)
+      // Create a Stripe checkout session (use user.email)
+      const { url } = await createCheckoutSession(items, user.email, discount)
 
       if (url) {
         // Redirect to Stripe Checkout
@@ -89,12 +105,33 @@ export default function CheckoutPage() {
 
         <div className="grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <Card className="neobrutalist-card">
-              <CardContent className="p-6">
-                <form onSubmit={handleStripeCheckout}>
-                  <div className="space-y-6">
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div>
+            {authLoading ? (
+              <Card className="neobrutalist-card">
+                <CardContent className="p-6 text-center">Loading...</CardContent>
+              </Card>
+            ) : !user ? (
+              <Alert className="neobrutalist-alert border-primary">
+                <User className="h-4 w-4" />
+                <AlertTitle className="font-bold">Authentication Required</AlertTitle>
+                <AlertDescription>
+                  Please{" "}
+                  <Link href="/auth/sign-in?redirect=/checkout" className="font-bold underline">
+                    Sign In
+                  </Link>{" "}
+                  or{" "}
+                  <Link href="/auth/sign-up?redirect=/checkout" className="font-bold underline">
+                    Sign Up
+                  </Link>{" "}
+                  to complete your purchase.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Card className="neobrutalist-card">
+                <CardContent className="p-6">
+                  <form onSubmit={handleStripeCheckout}>
+                    <div className="space-y-6">
+                      <div className="grid gap-6 sm:grid-cols-2">
+                        <div>
                         <Label htmlFor="first-name">First Name</Label>
                         <Input
                           id="first-name"
@@ -118,16 +155,17 @@ export default function CheckoutPage() {
 
                     <div>
                       <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        className="neobrutalist-input mt-1"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        We'll send your eSIM details to this email address.
+                        <Input
+                          id="email"
+                          type="email"
+                          className="neobrutalist-input mt-1"
+                          required
+                          value={email}
+                          readOnly // Make email read-only if logged in
+                          // onChange={(e) => setEmail(e.target.value)} // Remove onChange
+                        />
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Your eSIM details will be sent to this email address.
                       </p>
                     </div>
 
@@ -149,7 +187,11 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="pt-4">
-                      <Button type="submit" className="neobrutalist-button text-lg w-full" disabled={isLoading}>
+                      <Button
+                        type="submit"
+                        className="neobrutalist-button text-lg w-full"
+                        disabled={isLoading || !user || authLoading} // Disable if loading or not logged in
+                      >
                         {isLoading ? "Processing..." : "Complete Purchase with Stripe"}
                       </Button>
                     </div>
@@ -157,6 +199,7 @@ export default function CheckoutPage() {
                 </form>
               </CardContent>
             </Card>
+            )}
           </div>
 
           <div>
@@ -209,4 +252,3 @@ export default function CheckoutPage() {
     </div>
   )
 }
-

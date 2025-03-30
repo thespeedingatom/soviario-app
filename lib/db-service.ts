@@ -39,7 +39,7 @@ export type PaymentMethod = {
 
 // Order CRUD operations
 export async function createOrder(userId: string, items: CartItem[], discount = 0) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // Calculate total
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0) - discount
@@ -82,7 +82,7 @@ export async function createOrder(userId: string, items: CartItem[], discount = 
 }
 
 export async function getOrderById(orderId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // Get order
   const { data: order, error } = await supabase.from("orders").select("*").eq("id", orderId).single()
@@ -103,7 +103,7 @@ export async function getOrderById(orderId: string) {
 
 // Update the getUserOrders function to handle errors better and provide fallbacks
 export async function getUserOrders(userId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     // Get orders
@@ -153,7 +153,7 @@ export async function getUserOrders(userId: string) {
 }
 
 export async function updateOrderStatus(orderId: string, status: Order["status"]) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from("orders")
@@ -173,7 +173,7 @@ export async function updateOrderStatus(orderId: string, status: Order["status"]
 }
 
 export async function updateOrderStripeIds(orderId: string, stripeCheckoutId?: string, stripePaymentIntentId?: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const updates: any = { updated_at: new Date().toISOString() }
   if (stripeCheckoutId) updates.stripe_checkout_id = stripeCheckoutId
@@ -196,7 +196,7 @@ export async function savePaymentMethod(
   cardLast4?: string,
   isDefault = false,
 ) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // If this is the default payment method, unset any existing defaults
   if (isDefault) {
@@ -223,7 +223,7 @@ export async function savePaymentMethod(
 }
 
 export async function getUserPaymentMethods(userId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from("customer_payment_methods")
@@ -240,7 +240,7 @@ export async function getUserPaymentMethods(userId: string) {
 }
 
 export async function deletePaymentMethod(paymentMethodId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { error } = await supabase.from("customer_payment_methods").delete().eq("id", paymentMethodId)
 
@@ -252,7 +252,7 @@ export async function deletePaymentMethod(paymentMethodId: string) {
 }
 
 export async function setDefaultPaymentMethod(userId: string, paymentMethodId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // Unset any existing defaults
   await supabase.from("customer_payment_methods").update({ is_default: false }).eq("user_id", userId)
@@ -272,4 +272,3 @@ export async function setDefaultPaymentMethod(userId: string, paymentMethodId: s
 
   return data
 }
-
