@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./supabase"
+import { createServerSupabaseClient } from "./supabase-server"
 import type { CartItem } from "@/contexts/cart-context"
 
 // Types

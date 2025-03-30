@@ -247,7 +247,7 @@ export default function Home() {
                       </NeoButton>
                     </Link>
                     <Link href="/how-it-works">
-                      <NeoButton variant="outline" color="white" size="lg">
+                      <NeoButton size="lg">
                         Learn More
                       </NeoButton>
                     </Link>

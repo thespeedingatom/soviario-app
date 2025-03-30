@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js"
-import { cookies } from "next/headers"
 
 // This is a singleton pattern to ensure we only create one client per environment
 let browserClient: ReturnType<typeof createClient> | null = null
@@ -18,26 +17,26 @@ export function getSupabaseBrowserClient() {
   return browserClient
 }
 
-// For server components
-export function createServerSupabaseClient() {
-  // Don't use cookies() in client components
-  const cookieStore = typeof window === "undefined" ? { toString: () => cookies().toString() } : undefined
-
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-    auth: {
-      persistSession: false,
-    },
-    ...(cookieStore && {
-      global: {
-        headers: {
-          cookie: cookieStore.toString(),
-        },
-      },
-    }),
-  })
-}
-
+// For server components, import from supabase-server.ts instead
+// This is provided for backward compatibility only
 export function getSupabaseServerClient() {
-  return createServerSupabaseClient()
+  console.warn(
+    "getSupabaseServerClient() called from client module. Import from supabase-server.ts for server components."
+  )
+  if (typeof window === "undefined") {
+    // We're on the server, dynamically import the server version
+    // This will throw an error in client components, which is expected
+    try {
+      // @ts-ignore - This is intentionally avoiding type checking
+      const { getSupabaseServerClient: serverClient } = require("./supabase-server")
+      return serverClient()
+    } catch (e) {
+      console.error("Failed to load server Supabase client:", e)
+      throw new Error("Cannot use server client in this context")
+    }
+  }
+  
+  // Return browser client as fallback, but it won't have server capabilities
+  return getSupabaseBrowserClient()
 }
 

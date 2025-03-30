@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useSearchParams } from "next/navigation"
-import { verifyCheckoutSession } from "@/app/actions/stripe-actions"
+import { verifyCheckoutSession } from "@/app/_actions/stripe-actions"
 
 export default function CheckoutSuccessPage() {
   const { clearCart } = useCart()

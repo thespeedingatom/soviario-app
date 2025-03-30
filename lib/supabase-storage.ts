@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./supabase"
+import { createServerSupabaseClient } from "./supabase-server"
 
 // Define storage bucket names
 export const STORAGE_BUCKETS = {

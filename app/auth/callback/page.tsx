@@ -1,35 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
+import { Suspense, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoAlert } from "@/components/ui/neo-alert"
+import { authClient } from "@/lib/auth-client"
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
+        // Better Auth handles the callback automatically
+        // We just need to check if the session exists
+        const session = await authClient.getSession()
 
-        if (sessionError) {
-          console.error("Error getting auth session:", sessionError.message)
-
+        // Check for error in the URL (Better Auth might set this)
+        const errorParam = searchParams.get("error")
+        if (errorParam) {
+          console.error("Error in auth callback:", errorParam)
+          
           // Check for OAuth configuration errors
           if (
-            sessionError.message.includes("OAuth") ||
-            sessionError.message.includes("provider") ||
-            sessionError.message.includes("secret")
+            errorParam.includes("OAuth") ||
+            errorParam.includes("provider") ||
+            errorParam.includes("secret")
           ) {
-            setError("OAuth configuration error: " + sessionError.message)
+            setError("OAuth configuration error: " + errorParam)
             setTimeout(() => router.push("/auth/sign-in?error=oauth_config"), 3000)
             return
           }
@@ -47,7 +47,7 @@ export default function AuthCallbackPage() {
 
         // Redirect to dashboard after successful authentication
         router.push("/dashboard")
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error in auth callback:", err)
         setError("An unexpected error occurred. Please try again.")
         setTimeout(() => router.push("/auth/sign-in"), 3000)
@@ -55,7 +55,7 @@ export default function AuthCallbackPage() {
     }
 
     handleAuthCallback()
-  }, [router, supabase.auth])
+  }, [router, searchParams])
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -84,3 +84,19 @@ export default function AuthCallbackPage() {
   )
 }
 
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <NeoCardPlain>
+          <div className="p-8 text-center">
+            <h2 className="text-2xl font-bold">Loading...</h2>
+            <p className="mt-2 text-muted-foreground">Please wait while we prepare your authentication.</p>
+          </div>
+        </NeoCardPlain>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
+  )
+}

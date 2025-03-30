@@ -9,7 +9,7 @@ import { ArrowLeft, Package, Download, Clock, CheckCircle, XCircle } from "lucid
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import type { Order } from "@/lib/db-service"
-import { fetchOrderById } from "@/app/actions/order-actions"
+import { fetchOrderById } from "@/app/_actions/order-actions"
 
 export default function OrderDetailPage() {
   const { id } = useParams()

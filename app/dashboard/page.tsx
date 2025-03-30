@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { NeoButton } from "@/components/ui/neo-button"
 import { NeoCard } from "@/components/ui/neo-card"
+import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoTag } from "@/components/ui/neo-tag"
 import { NeoBadge } from "@/components/ui/neo-badge"
@@ -10,7 +12,7 @@ import { Wifi, Clock, MapPin, BarChart, Package, Settings, LogOut } from "lucide
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import type { Order } from "@/lib/db-service"
-import { fetchUserOrders } from "@/app/actions/order-actions"
+import { fetchUserOrders } from "@/app/_actions/order-actions"
 
 // Mock eSIM data
 const esimData = [
@@ -51,9 +53,34 @@ const esimData = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { user } = useAuth()
+  const { user, isPending } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (!isPending && !user) {
+      router.push('/auth/sign-in')
+    }
+  }, [user, isPending, router])
+
+  // Show loading state while checking auth
+  if (isPending || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <NeoCardPlain>
+          <div className="p-8 text-center">
+            <h2 className="text-2xl font-bold">Loading Dashboard...</h2>
+            <p className="mt-2 text-muted-foreground">Please wait while we verify your session.</p>
+            <div className="mt-4 flex justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-black"></div>
+            </div>
+          </div>
+        </NeoCardPlain>
+      </div>
+    )
+  }
 
   useEffect(() => {
     async function getOrders() {
@@ -426,7 +453,6 @@ export default function DashboardPage() {
                       <NeoButton>Browse eSIM Plans</NeoButton>
                     </Link>
                   </div>
-                </div>
               ) : (
                 <div className="mt-8 overflow-hidden border-4 border-black">
                   <table className="w-full">
@@ -474,4 +500,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 "use server"
 
-import { createServerSupabaseClient } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 import type { Order } from "@/lib/db-service"
 
 export async function fetchUserOrders(userId: string): Promise<Order[]> {
@@ -52,4 +52,3 @@ export async function fetchOrderById(orderId: string): Promise<Order | null> {
     return null
   }
 }
-

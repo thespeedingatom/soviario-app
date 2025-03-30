@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { NeoGrid } from "@/components/ui/neo-grid"
 import { ESIMCard } from "@/components/esim-card"
-import { fetchProductsByRegion, fetchFeaturedProducts, fetchAllProducts } from "@/app/actions/product-actions"
+import { fetchProductsByRegion, fetchFeaturedProducts, fetchAllProducts } from "@/app/_actions/product-actions"
 import type { Product } from "@/lib/db-products"
 import { Skeleton } from "@/components/ui/skeleton"
 

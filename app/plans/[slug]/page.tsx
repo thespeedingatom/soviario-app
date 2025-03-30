@@ -5,7 +5,7 @@ import { NeoButton } from "@/components/ui/neo-button"
 import { NeoCard } from "@/components/ui/neo-card"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoTabs } from "@/components/ui/neo-tabs"
-import { fetchProductBySlug, fetchRelatedProducts } from "@/app/actions/product-actions"
+import { fetchProductBySlug, fetchRelatedProducts } from "@/app/_actions/product-actions"
 import AddToCartButton from "@/components/add-to-cart-button"
 import { notFound } from "next/navigation"
 

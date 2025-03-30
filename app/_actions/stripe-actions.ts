@@ -3,18 +3,18 @@
 import type { CartItem } from "@/contexts/cart-context"
 import Stripe from "stripe"
 import { createOrder, updateOrderStripeIds } from "@/lib/db-service"
-import { createServerSupabaseClient } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-02-24.acacia",
 })
 
 // Create a checkout session
 export async function createCheckoutSession(items: CartItem[], email: string, discountAmount = 0) {
   try {
     // Get the current user
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const {
       data: { session: supabaseSession },
     } = await supabase.auth.getSession()
@@ -127,10 +127,9 @@ export async function verifyCheckoutSession(sessionId: string, orderId: string) 
     throw new Error("Failed to verify checkout session")
   }
 }
-
 // Update order status - ensure this is async
 export async function updateOrderStatus(orderId: string, status: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   await supabase
     .from("orders")
@@ -140,4 +139,3 @@ export async function updateOrderStatus(orderId: string, status: string) {
     })
     .eq("id", orderId)
 }
-

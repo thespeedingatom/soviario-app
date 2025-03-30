@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { NeoButton } from "@/components/ui/neo-button"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "@/components/ui/use-toast"
+import { authClient } from "@/lib/auth-client"
 
 export function GoogleSignInButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -14,37 +15,36 @@ export function GoogleSignInButton() {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true)
-      const { error, data } = await signInWithGoogle()
+      
+      // Use Better Auth directly for new code
+      const result = await authClient.signIn.social({
+        provider: "google",
+      })
 
-      if (error) {
-        console.error("Google sign-in error:", error)
+      if (result.error) {
+        console.error("Google sign-in error:", result.error)
 
         // Check if it's a configuration error
         if (
-          error.message &&
-          (error.message.includes("OAuth") || error.message.includes("provider") || error.message.includes("secret"))
+          result.error.message &&
+          (result.error.message.includes("OAuth") || 
+           result.error.message.includes("provider") || 
+           result.error.message.includes("secret"))
         ) {
-          router.push(`/auth/sign-in?error=${encodeURIComponent(error.message)}`)
+          router.push(`/auth/sign-in?error=${encodeURIComponent(result.error.message)}`)
           return
         }
 
         toast({
           title: "Sign-in Error",
-          description: error.message || "Failed to sign in with Google. Please try again.",
+          description: result.error.message || "Failed to sign in with Google. Please try again.",
           variant: "destructive",
         })
         return
       }
 
-      // If we get here with no error but also no URL to redirect to,
-      // it means the OAuth flow is starting and will redirect the user away from our app
-      if (!data?.url) {
-        // This is normal for OAuth flow, no need to show an error
-        return
-      }
-
-      // If we have a URL, redirect to it
-      window.location.href = data.url
+      // Better Auth handles the redirect automatically
+      // No need to manually redirect
     } catch (err: any) {
       console.error("Unexpected error during Google sign-in:", err)
       toast({
@@ -93,4 +93,3 @@ export function GoogleSignInButton() {
     </NeoButton>
   )
 }
-

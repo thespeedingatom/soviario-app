@@ -6,7 +6,7 @@ import { NeoCard } from "@/components/ui/neo-card"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoAlert } from "@/components/ui/neo-alert"
 import { Mail } from "lucide-react"
-import { sendTestEmail } from "@/app/actions/email-actions"
+import { sendTestEmail } from "@/app/_actions/email-actions"
 
 export default function TestEmailPage() {
   const [isSending, setIsSending] = useState(false)
