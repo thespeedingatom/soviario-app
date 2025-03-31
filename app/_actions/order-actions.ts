@@ -5,7 +5,7 @@ import type { Order } from "@/lib/db-service"
 
 export async function fetchUserOrders(userId: string): Promise<Order[]> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient() // Add await
 
     const { data, error } = await supabase
       .from("orders")
@@ -30,7 +30,7 @@ export async function fetchUserOrders(userId: string): Promise<Order[]> {
 
 export async function fetchOrderById(orderId: string): Promise<Order | null> {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient() // Add await
 
     const { data, error } = await supabase
       .from("orders")

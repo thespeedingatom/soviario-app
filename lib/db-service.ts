@@ -7,12 +7,20 @@ export type Order = {
   user_id: string
   stripe_checkout_id?: string
   stripe_payment_intent_id?: string
-  status: "pending" | "processing" | "completed" | "cancelled" | "refunded"
+  status: "pending" | "processing" | "completed" | "cancelled" | "refunded" | "failed" 
   total: number
   discount: number
   created_at: string
   updated_at: string
   items?: OrderItem[]
+  maya_esim_data?: { // Update structure based on createMayaEsim return type
+    esimUid: string;
+    iccid: string;
+    activationCode: string;
+    manualCode: string;
+    smdpAddress: string;
+    // We don't store qrCodeData directly anymore
+  } | null;
 }
 
 export type OrderItem = {
@@ -102,14 +110,14 @@ export async function getOrderById(orderId: string) {
 }
 
 // Update the getUserOrders function to handle errors better and provide fallbacks
-export async function getUserOrders(userId: string) {
+export async function getUserOrders(userId: string): Promise<Order[]> { // Add return type
   const supabase = await createServerSupabaseClient()
 
   try {
-    // Get orders
-    const { data: orders, error } = await supabase
+    // Get orders, explicitly select maya_esim_data
+    const { data: ordersData, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, maya_esim_data") // Explicitly select maya_esim_data
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
 
@@ -117,15 +125,18 @@ export async function getUserOrders(userId: string) {
       console.error(`Error fetching orders for user ${userId}:`, error)
       return [] // Return empty array instead of throwing error
     }
+    
+    // Cast the fetched data to the Order type
+    const orders: Order[] = ordersData || [];
 
     // If no orders, return empty array
-    if (!orders || orders.length === 0) {
+    if (orders.length === 0) {
       return []
     }
 
     // Get order items for each order
     const ordersWithItems = await Promise.all(
-      orders.map(async (order) => {
+      orders.map(async (order: Order) => { // Add type annotation for order
         try {
           const { data: items, error: itemsError } = await supabase
             .from("order_items")
@@ -187,6 +198,34 @@ export async function updateOrderStripeIds(orderId: string, stripeCheckoutId?: s
 
   return data
 }
+
+// Function to update order with eSIM data (using new structure)
+export async function updateOrderWithEsimData(orderId: string, esimData: { 
+  esimUid: string; 
+  iccid: string; 
+  activationCode: string; 
+  manualCode: string; 
+  smdpAddress: string; 
+}) {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ 
+      maya_esim_data: esimData,
+      updated_at: new Date().toISOString() 
+    })
+    .eq("id", orderId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Error updating order with eSIM data: ${error.message}`)
+  }
+
+  return data
+}
+
 
 // Payment Method CRUD operations
 export async function savePaymentMethod(

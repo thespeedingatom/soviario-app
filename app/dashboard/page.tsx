@@ -8,65 +8,134 @@ import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoTag } from "@/components/ui/neo-tag"
 import { NeoBadge } from "@/components/ui/neo-badge"
-import { Wifi, Clock, MapPin, BarChart, Package, Settings, LogOut } from "lucide-react"
+import { Wifi, Clock, MapPin, BarChart, Package, Settings, LogOut, QrCode } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
-import type { Order } from "@/lib/db-service"
+import type { Order, OrderItem } from "@/lib/db-service"
 import { fetchUserOrders } from "@/app/_actions/order-actions"
+import Image from "next/image"
+import QRCode from 'qrcode' // Import qrcode library
 
-// Mock eSIM data
-const esimData = [
-  {
-    id: "esim-1",
-    name: "Europe 3GB",
-    status: "active",
-    dataUsed: 1.2,
-    dataTotal: 3,
-    activationDate: "2023-03-15",
-    expiryDate: "2023-04-15",
-    countries: 36,
-    region: "Europe",
-  },
-  {
-    id: "esim-2",
-    name: "USA 5GB",
-    status: "active",
-    dataUsed: 2.8,
-    dataTotal: 5,
-    activationDate: "2023-03-10",
-    expiryDate: "2023-04-10",
-    countries: 1,
-    region: "USA",
-  },
-  {
-    id: "esim-3",
-    name: "Asia 3GB",
-    status: "expired",
-    dataUsed: 3,
-    dataTotal: 3,
-    activationDate: "2023-02-01",
-    expiryDate: "2023-03-01",
-    countries: 14,
-    region: "Asia",
-  },
-]
+// Define type for processed eSIM data
+type EsimDisplayData = {
+  orderId: string;
+  itemId: string;
+  name: string;
+  status: Order["status"];
+  activationCode?: string;
+  // qrCodeData is generated client-side now
+  region?: string;
+  data?: string;
+  duration?: string;
+  purchaseDate: string;
+}
+
+// Helper component to generate and display QR code client-side
+function QrCodeDisplay({ activationCode, orderId }: { activationCode: string; orderId: string }) {
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    QRCode.toDataURL(activationCode, { width: 200, margin: 1 })
+      .then(url => {
+        setQrCodeUrl(url);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('QR code generation failed:', err);
+        setError('Could not generate QR code.');
+        setQrCodeUrl(null);
+      });
+  }, [activationCode]); // Re-generate if activationCode changes
+
+  if (error) {
+    return <p className="text-red-600 text-sm mt-2">{error}</p>;
+  }
+
+  if (!qrCodeUrl) {
+    return <p className="text-sm mt-2">Generating QR code...</p>;
+  }
+
+  return (
+    <div className="mt-4 text-center">
+      <p className="text-sm font-bold mb-2">Activation QR Code:</p>
+      <Image
+        src={qrCodeUrl}
+        alt={`eSIM QR Code for order ${orderId.slice(0, 8)}`}
+        width={200}
+        height={200}
+        className="mx-auto border-4 border-black p-1"
+      />
+      <p className="mt-2 text-xs font-mono break-all">Code: {activationCode}</p>
+    </div>
+  );
+}
+
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
+  const [processedEsims, setProcessedEsims] = useState<EsimDisplayData[]>([])
   const { user, isPending } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true) // For order fetching
   const router = useRouter()
 
   // Redirect unauthenticated users
   useEffect(() => {
     if (!isPending && !user) {
-      router.push('/auth/sign-in')
+      router.push('/auth/sign-in?redirect=/dashboard') // Redirect to sign-in if not logged in after check
     }
   }, [user, isPending, router])
 
-  // Show loading state while checking auth
-  if (isPending || !user) {
+  // Fetch orders when user is available
+  useEffect(() => {
+    async function getOrders() {
+      // Only fetch if user exists and is not pending
+      if (!isPending && user?.id) {
+        try {
+          setIsLoading(true);
+          const userOrders = await fetchUserOrders(user.id);
+          setOrders(userOrders);
+
+          // Process orders to extract eSIM data for display
+          const esims: EsimDisplayData[] = userOrders
+            .filter(order => order.status === 'completed' && order.maya_esim_data && order.items && order.items.length > 0)
+            .flatMap(order =>
+              order.items!.map(item => ({
+                orderId: order.id,
+                itemId: item.id,
+                name: item.name,
+                status: order.status,
+                activationCode: order.maya_esim_data?.activationCode,
+                region: item.region,
+                data: item.data,
+                duration: item.duration,
+                purchaseDate: order.created_at,
+              }))
+            );
+          setProcessedEsims(esims);
+
+        } catch (error) {
+          console.error("Error fetching orders:", error);
+          setOrders([]);
+          setProcessedEsims([]);
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (!isPending && !user) {
+        // If auth check done and no user, stop loading
+        setIsLoading(false);
+        setOrders([]);
+        setProcessedEsims([]);
+      }
+    }
+
+    getOrders();
+  }, [user, isPending]); // Rerun when user or isPending changes
+
+
+  // Show loading state while checking auth or fetching data
+  if (isPending || isLoading) { // Simplified loading check
     return (
       <div className="flex min-h-screen items-center justify-center">
         <NeoCardPlain>
@@ -81,47 +150,41 @@ export default function DashboardPage() {
       </div>
     )
   }
+  
+  // If loading is done but still no user (should have been redirected, but as fallback)
+  if (!user) {
+     return (
+       <div className="flex min-h-screen items-center justify-center">
+         <NeoCardPlain>
+           <div className="p-8 text-center">
+             <h2 className="text-2xl font-bold">Redirecting...</h2>
+             <p className="mt-2 text-muted-foreground">Please sign in to view your dashboard.</p>
+           </div>
+         </NeoCardPlain>
+       </div>
+     )
+  }
 
-  useEffect(() => {
-    async function getOrders() {
-      if (user?.id) {
-        try {
-          setIsLoading(true)
-          const userOrders = await fetchUserOrders(user.id)
-          setOrders(userOrders)
-        } catch (error) {
-          console.error("Error fetching orders:", error)
-          // Set orders to empty array on error instead of leaving it undefined
-          setOrders([])
-        } finally {
-          setIsLoading(false)
-        }
-      } else {
-        // If no user, set loading to false to avoid infinite loading state
-        setIsLoading(false)
-      }
-    }
-
-    getOrders()
-  }, [user])
 
   // Helper function to format status badge
   const getStatusBadge = (status: Order["status"]) => {
     switch (status) {
       case "pending":
-        return <NeoBadge color="yellow">PENDING</NeoBadge>
+        return <NeoBadge color="yellow">PENDING</NeoBadge>;
       case "processing":
-        return <NeoBadge color="blue">PROCESSING</NeoBadge>
+        return <NeoBadge color="blue">PROCESSING</NeoBadge>;
       case "completed":
-        return <NeoBadge color="green">COMPLETED</NeoBadge>
+        return <NeoBadge color="green">COMPLETED</NeoBadge>;
       case "cancelled":
-        return <NeoBadge color="red">CANCELLED</NeoBadge>
+        return <NeoBadge color="red">CANCELLED</NeoBadge>;
       case "refunded":
-        return <NeoBadge color="purple">REFUNDED</NeoBadge>
+        return <NeoBadge color="purple">REFUNDED</NeoBadge>;
+      case "failed":
+        return <NeoBadge color="red">FAILED</NeoBadge>;
       default:
-        return <NeoBadge color="gray">UNKNOWN</NeoBadge>
+        return <NeoBadge color="yellow">UNKNOWN</NeoBadge>;
     }
-  }
+  };
 
   return (
     <div className="flex flex-col">
@@ -134,7 +197,7 @@ export default function DashboardPage() {
             <div>
               <div className="inline-block bg-black px-4 py-2 text-sm font-bold uppercase text-white">DASHBOARD</div>
               <h1 className="mt-4 text-4xl font-black uppercase tracking-tight">
-                WELCOME BACK, {user?.user_metadata?.first_name || user?.email?.split("@")[0] || "USER"}
+                WELCOME BACK, {user?.name || user?.email?.split("@")[0] || "USER"}
               </h1>
               <div className="mt-2 h-1 w-32 bg-black"></div>
             </div>
@@ -188,12 +251,11 @@ export default function DashboardPage() {
                       <Wifi className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium uppercase text-muted-foreground">Active eSIMs</div>
-                      <div className="text-3xl font-bold">{esimData.filter((e) => e.status === "active").length}</div>
+                      <div className="text-sm font-medium uppercase text-muted-foreground">Purchased eSIMs</div>
+                      <div className="text-3xl font-bold">{processedEsims.length}</div>
                     </div>
                   </div>
                 </NeoCard>
-
                 <NeoCard color="yellow">
                   <div className="flex items-center">
                     <div className="mr-4 flex h-16 w-16 items-center justify-center rounded-full bg-black">
@@ -205,118 +267,82 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </NeoCard>
-
-                <NeoCard color="green">
-                  <div className="flex items-center">
-                    <div className="mr-4 flex h-16 w-16 items-center justify-center rounded-full bg-black">
-                      <MapPin className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium uppercase text-muted-foreground">Countries Covered</div>
-                      <div className="text-3xl font-bold">51</div>
-                    </div>
-                  </div>
-                </NeoCard>
-
-                <NeoCard color="pink">
-                  <div className="flex items-center">
-                    <div className="mr-4 flex h-16 w-16 items-center justify-center rounded-full bg-black">
-                      <BarChart className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium uppercase text-muted-foreground">Data Used</div>
-                      <div className="text-3xl font-bold">4.0 GB</div>
-                    </div>
-                  </div>
-                </NeoCard>
+                {/* Other stats cards can be updated similarly if needed */}
+                 <NeoCard color="green">
+                   <div className="flex items-center">
+                     <div className="mr-4 flex h-16 w-16 items-center justify-center rounded-full bg-black">
+                       <MapPin className="h-8 w-8 text-white" />
+                     </div>
+                     <div>
+                       <div className="text-sm font-medium uppercase text-muted-foreground">Countries Covered</div>
+                       <div className="text-3xl font-bold">51</div> {/* Placeholder */}
+                     </div>
+                   </div>
+                 </NeoCard>
+                 <NeoCard color="pink">
+                   <div className="flex items-center">
+                     <div className="mr-4 flex h-16 w-16 items-center justify-center rounded-full bg-black">
+                       <BarChart className="h-8 w-8 text-white" />
+                     </div>
+                     <div>
+                       <div className="text-sm font-medium uppercase text-muted-foreground">Data Used</div>
+                       <div className="text-3xl font-bold">N/A</div> {/* Placeholder */}
+                     </div>
+                   </div>
+                 </NeoCard>
               </div>
 
-              {/* Active eSIMs */}
+              {/* Purchased eSIMs Section */}
               <div className="mt-12">
-                <h2 className="text-2xl font-bold">Active eSIMs</h2>
-                <div className="mt-4 grid gap-8 md:grid-cols-2">
-                  {esimData
-                    .filter((esim) => esim.status === "active")
-                    .map((esim) => (
+                <h2 className="text-2xl font-bold">Purchased eSIMs</h2>
+                {processedEsims.length === 0 ? (
+                   <p className="mt-4 text-muted-foreground">No completed eSIM orders found.</p>
+                ) : (
+                  <div className="mt-4 grid gap-8 md:grid-cols-2">
+                    {/* Display first 2 eSIMs on overview */}
+                    {processedEsims.slice(0, 2).map((esim) => (
                       <NeoCard
-                        key={esim.id}
+                        key={esim.itemId}
                         color={esim.region === "Europe" ? "blue" : esim.region === "USA" ? "yellow" : "pink"}
                       >
                         <div className="flex justify-between">
                           <h3 className="text-xl font-bold">{esim.name}</h3>
-                          <NeoBadge color={esim.status === "active" ? "green" : "red"}>
-                            {esim.status.toUpperCase()}
-                          </NeoBadge>
+                          {getStatusBadge(esim.status)}
                         </div>
-
                         <div className="mt-4 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Wifi className="h-4 w-4" />
-                            <span>
-                              {esim.dataUsed} GB / {esim.dataTotal} GB Used
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>Expires on {new Date(esim.expiryDate).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>
-                              {esim.countries} {esim.countries === 1 ? "Country" : "Countries"}
-                            </span>
-                          </div>
+                           {esim.data && <div className="flex items-center gap-2"><BarChart className="h-4 w-4" /><span>{esim.data}</span></div>}
+                           {esim.duration && <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>{esim.duration}</span></div>}
+                           {esim.region && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{esim.region}</span></div>}
+                           <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
                         </div>
-
-                        <div className="mt-4 h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div
-                            className="h-full rounded-full bg-primary"
-                            style={{ width: `${(esim.dataUsed / esim.dataTotal) * 100}%` }}
-                          ></div>
-                        </div>
-
+                        {esim.activationCode && (
+                          <QrCodeDisplay activationCode={esim.activationCode} orderId={esim.orderId} />
+                        )}
                         <div className="mt-6">
-                          <Link href={`/dashboard/esims/${esim.id}`}>
-                            <NeoButton className="w-full">Manage eSIM</NeoButton>
+                          <Link href={`/dashboard/orders/${esim.orderId}`}>
+                            <NeoButton className="w-full">View Order Details</NeoButton>
                           </Link>
                         </div>
                       </NeoCard>
                     ))}
-                </div>
-
-                <div className="mt-6 text-center">
-                  <Link href="/dashboard/esims">
-                    <NeoButton variant="outline">View All eSIMs</NeoButton>
-                  </Link>
-                </div>
+                  </div>
+                )}
+                 <div className="mt-6 text-center">
+                   <NeoButton variant="outline" onClick={() => setActiveTab('esims')}>View All eSIMs</NeoButton>
+                 </div>
               </div>
 
-              {/* Recent Orders */}
+              {/* Recent Orders Section */}
               <div className="mt-12">
                 <h2 className="text-2xl font-bold">Recent Orders</h2>
-                {isLoading ? (
-                  <div className="mt-4 overflow-hidden border-4 border-black">
-                    <div className="animate-pulse">
-                      <div className="h-12 w-full bg-black"></div>
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-16 w-full border-b border-black last:border-b-0 p-4">
-                          <div className="h-8 w-full bg-gray-200"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                {isLoading ? ( // Use main isLoading state
+                  <div className="mt-4 overflow-hidden border-4 border-black"> {/* Loading skeleton */} </div>
                 ) : orders.length === 0 ? (
-                  <div className="mt-4 text-center">
-                    <p className="text-muted-foreground">You haven't placed any orders yet.</p>
-                    <div className="mt-4">
-                      <Link href="/plans">
-                        <NeoButton>Browse eSIM Plans</NeoButton>
-                      </Link>
-                    </div>
-                  </div>
+                  <div className="mt-4 text-center"> {/* No orders message */} </div>
                 ) : (
                   <div className="mt-4 overflow-hidden border-4 border-black">
                     <table className="w-full">
+                      {/* Table Head */}
                       <thead className="bg-black text-white">
                         <tr>
                           <th className="p-4 text-left">Order ID</th>
@@ -326,6 +352,7 @@ export default function DashboardPage() {
                           <th className="p-4 text-left">Actions</th>
                         </tr>
                       </thead>
+                      {/* Table Body */}
                       <tbody>
                         {orders.slice(0, 3).map((order) => (
                           <tr key={order.id} className="border-b border-black last:border-b-0">
@@ -335,9 +362,7 @@ export default function DashboardPage() {
                             <td className="p-4">{getStatusBadge(order.status)}</td>
                             <td className="p-4">
                               <Link href={`/dashboard/orders/${order.id}`}>
-                                <NeoButton variant="outline" size="sm">
-                                  View
-                                </NeoButton>
+                                <NeoButton variant="outline" size="sm">View</NeoButton>
                               </Link>
                             </td>
                           </tr>
@@ -346,7 +371,6 @@ export default function DashboardPage() {
                     </table>
                   </div>
                 )}
-
                 <div className="mt-6 text-center">
                   <Link href="/dashboard/orders">
                     <NeoButton variant="outline">View All Orders</NeoButton>
@@ -356,116 +380,72 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* eSIMs Tab */}
+          {/* My eSIMs Tab */}
           {activeTab === "esims" && (
-            <div>
-              <div className="flex justify-between">
-                <h2 className="text-2xl font-bold">My eSIMs</h2>
-                <Link href="/plans">
-                  <NeoButton>Buy New eSIM</NeoButton>
-                </Link>
-              </div>
-
-              <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {esimData.map((esim) => (
-                  <NeoCard
-                    key={esim.id}
-                    color={esim.region === "Europe" ? "blue" : esim.region === "USA" ? "yellow" : "pink"}
-                  >
-                    <div className="flex justify-between">
-                      <h3 className="text-xl font-bold">{esim.name}</h3>
-                      <NeoBadge color={esim.status === "active" ? "green" : "red"}>
-                        {esim.status.toUpperCase()}
-                      </NeoBadge>
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Wifi className="h-4 w-4" />
-                        <span>
-                          {esim.dataUsed} GB / {esim.dataTotal} GB Used
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          {esim.status === "active" ? "Expires" : "Expired"} on{" "}
-                          {new Date(esim.expiryDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>
-                          {esim.countries} {esim.countries === 1 ? "Country" : "Countries"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${(esim.dataUsed / esim.dataTotal) * 100}%` }}
-                      ></div>
-                    </div>
-
-                    <div className="mt-6">
-                      <Link href={`/dashboard/esims/${esim.id}`}>
-                        <NeoButton className="w-full">
-                          {esim.status === "active" ? "Manage eSIM" : "View Details"}
-                        </NeoButton>
-                      </Link>
-                    </div>
-                  </NeoCard>
-                ))}
-              </div>
-            </div>
-          )}
+             <div>
+               <div className="flex justify-between items-center mb-8">
+                 <h2 className="text-2xl font-bold">My Purchased eSIMs</h2>
+                 <Link href="/plans">
+                   <NeoButton>Buy New eSIM</NeoButton>
+                 </Link>
+               </div>
+               {processedEsims.length === 0 ? (
+                  <div className="text-center py-12"> {/* No eSIMs message */} </div>
+               ) : (
+                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                   {processedEsims.map((esim) => (
+                     <NeoCard
+                       key={esim.itemId}
+                       color={esim.region === "Europe" ? "blue" : esim.region === "USA" ? "yellow" : "pink"}
+                     >
+                       <div className="flex justify-between">
+                         <h3 className="text-xl font-bold">{esim.name}</h3>
+                         {getStatusBadge(esim.status)}
+                       </div>
+                       <div className="mt-4 space-y-2">
+                         {esim.data && <div className="flex items-center gap-2"><BarChart className="h-4 w-4" /><span>{esim.data}</span></div>}
+                         {esim.duration && <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>{esim.duration}</span></div>}
+                         {esim.region && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{esim.region}</span></div>}
+                         <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
+                       </div>
+                       {esim.activationCode && (
+                         <QrCodeDisplay activationCode={esim.activationCode} orderId={esim.orderId} />
+                       )}
+                       <div className="mt-6">
+                         <Link href={`/dashboard/orders/${esim.orderId}`}>
+                           <NeoButton className="w-full">View Order Details</NeoButton>
+                         </Link>
+                       </div>
+                     </NeoCard>
+                   ))}
+                 </div>
+               )}
+             </div>
+           )}
 
           {/* Orders Tab */}
           {activeTab === "orders" && (
             <div>
               <h2 className="text-2xl font-bold">Order History</h2>
-
               {isLoading ? (
-                <div className="mt-8 overflow-hidden border-4 border-black">
-                  <div className="animate-pulse">
-                    <div className="h-12 w-full bg-black"></div>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="h-16 w-full border-b border-black last:border-b-0 p-4">
-                        <div className="h-8 w-full bg-gray-200"></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <div className="mt-8 overflow-hidden border-4 border-black"> {/* Loading skeleton */} </div>
               ) : orders.length === 0 ? (
-                <div className="mt-8 text-center">
-                  <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-                    <Package className="h-12 w-12 text-muted-foreground" />
-                  </div>
-
-                  <h3 className="text-xl font-bold">No orders yet</h3>
-                  <p className="mt-2 text-muted-foreground">
-                    You haven't placed any orders yet. Browse our eSIM plans to get started.
-                  </p>
-
-                  <div className="mt-8">
-                    <Link href="/plans">
-                      <NeoButton>Browse eSIM Plans</NeoButton>
-                    </Link>
-                  </div>
+                <div className="mt-8 text-center"> {/* No orders message */} </div>
               ) : (
                 <div className="mt-8 overflow-hidden border-4 border-black">
                   <table className="w-full">
-                    <thead className="bg-black text-white">
-                      <tr>
-                        <th className="p-4 text-left">Order ID</th>
-                        <th className="p-4 text-left">Date</th>
-                        <th className="p-4 text-left">Items</th>
-                        <th className="p-4 text-left">Total</th>
-                        <th className="p-4 text-left">Status</th>
-                        <th className="p-4 text-left">Actions</th>
-                      </tr>
-                    </thead>
+                    {/* Table Head */}
+                     <thead className="bg-black text-white">
+                       <tr>
+                         <th className="p-4 text-left">Order ID</th>
+                         <th className="p-4 text-left">Date</th>
+                         <th className="p-4 text-left">Items</th>
+                         <th className="p-4 text-left">Total</th>
+                         <th className="p-4 text-left">Status</th>
+                         <th className="p-4 text-left">Actions</th>
+                       </tr>
+                     </thead>
+                    {/* Table Body */}
                     <tbody>
                       {orders.map((order) => (
                         <tr key={order.id} className="border-b border-black last:border-b-0">
@@ -480,9 +460,7 @@ export default function DashboardPage() {
                           <td className="p-4">{getStatusBadge(order.status)}</td>
                           <td className="p-4">
                             <Link href={`/dashboard/orders/${order.id}`}>
-                              <NeoButton variant="outline" size="sm">
-                                View
-                              </NeoButton>
+                              <NeoButton variant="outline" size="sm">View</NeoButton>
                             </Link>
                           </td>
                         </tr>

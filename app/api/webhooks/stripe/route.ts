@@ -1,10 +1,17 @@
-import { type NextRequest, NextResponse } from "next/server"
-import Stripe from "stripe"
-import { updateOrderStatus, updateOrderStripeIds } from "@/lib/db-service"
-import { sendOrderConfirmationEmail } from "@/lib/email-service"
+import { type NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+import {
+  updateOrderStatus,
+  updateOrderStripeIds,
+  getOrderById, // Import function to get order details
+  updateOrderWithEsimData, // Import function to save eSIM data
+} from "@/lib/db-service";
+// Use the existing sendEsimEmail function
+import { sendEsimEmail } from "@/app/_actions/email-actions"; 
+import { createMayaEsim } from "@/app/_actions/maya-actions"; // Import eSIM creation action
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-02-24.acacia", // Use the same API version as stripe-actions
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -39,13 +46,46 @@ export async function POST(req: NextRequest) {
             )
 
             // Update order status to processing
-            await updateOrderStatus(orderId, "processing")
+            const updatedOrder = await updateOrderStatus(orderId, "processing");
 
-            // Send confirmation email
-            if (session.customer_details?.email) {
-              await sendOrderConfirmationEmail(session.customer_details.email, orderId)
+            // Fetch full order details to get items
+            const fullOrder = await getOrderById(orderId);
+            const customerEmail = session.customer_details?.email;
+
+            if (fullOrder && fullOrder.items && fullOrder.items.length > 0 && customerEmail) {
+              // Assuming only one item per order for now, adjust if multiple eSIMs per order are possible
+              const orderItem = fullOrder.items[0]; 
+              
+              try {
+                // Provision eSIM via Maya Mobile using planTypeId (product_id)
+                const esimDetails = await createMayaEsim(
+                  orderItem.product_id // Pass only the product_id as planTypeId
+                );
+
+                // Save eSIM data to the order
+                await updateOrderWithEsimData(orderId, esimDetails);
+
+                // Send QR code email using the existing function
+                await sendEsimEmail(customerEmail, esimDetails.activationCode, orderId);
+
+                // Optionally update order status to 'completed' after provisioning and email
+                await updateOrderStatus(orderId, "completed");
+
+              } catch (provisionError) {
+                console.error(`Failed to provision eSIM or send email for order ${orderId}:`, provisionError);
+                // Handle provisioning failure - maybe set order status to 'provisioning_failed'
+                await updateOrderStatus(orderId, "failed"); // Example error status
+              }
+            } else {
+               console.error(`Could not find order items or customer email for order ${orderId} to provision eSIM.`);
+               // Handle missing data - maybe set order status to 'failed'
+               await updateOrderStatus(orderId, "failed"); 
             }
+          } else {
+             console.warn(`Order ${orderId} not paid or payment intent missing in checkout session ${session.id}`);
           }
+        } else {
+           console.error(`Missing order_id in metadata for checkout session ${session.id}`);
         }
         break
       }
@@ -72,4 +112,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-

@@ -10,12 +10,18 @@ export async function up(sql: (query: string) => Promise<void>): Promise<void> {
     ADD COLUMN price_gbp numeric,
     ADD COLUMN price_cad numeric,
     ADD COLUMN price_aud numeric,
-    ADD COLUMN price_jpy numeric
+    ADD COLUMN price_jpy numeric;
+
+    ALTER TABLE orders
+    ADD COLUMN maya_esim_data jsonb;
   `)
 }
 
 export async function down(sql: (query: string) => Promise<void>): Promise<void> {
   await sql(`
+    ALTER TABLE orders
+    DROP COLUMN maya_esim_data;
+
     ALTER TABLE products
     DROP COLUMN data_quota_bytes,
     DROP COLUMN wholesale_price,

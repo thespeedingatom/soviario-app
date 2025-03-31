@@ -40,15 +40,22 @@ var dotenv = require("dotenv");
 var path = require("path");
 var maya_auth_1 = require("./lib/maya-auth");
 dotenv.config({ path: path.resolve(__dirname, '.env.local') });
-var testUrl = "https://api.maya.net/connectivity/v1/account/products?region=europe&country=us";
-console.log("Testing Maya API at: ".concat(testUrl));
-fetch(testUrl, {
+var createEsimUrl = "https://api.maya.net/connectivity/v1/account/esims";
+var productIdToProvision = 'FV8wHnU9fDk8'; // Example Product ID: Europe+ 10GB - 10 Days
+console.log("Attempting to create eSIM at: ".concat(createEsimUrl));
+console.log("Using Product ID: ".concat(productIdToProvision));
+fetch(createEsimUrl, {
+    method: 'POST', // Use POST method
     headers: {
         Authorization: (0, maya_auth_1.getMayaAuthHeader)(),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Accept-Version': 'v1'
-    }
+    },
+    body: JSON.stringify({
+        product_id: productIdToProvision,
+        // Add other potential required fields if known, e.g., quantity: 1
+    })
 })
     .then(function (res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, _b, _c;
