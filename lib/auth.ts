@@ -29,24 +29,13 @@ export const auth = betterAuth({
   plugins: [
     nextCookies() // For handling cookies in Next.js server actions
   ],
-  // Session configuration
+  // Session configuration (REMOVED fields mapping)
   session: {
-    // Map Supabase session fields to Better Auth fields if needed
-    fields: {
-      expiresAt: "expires", // Map expiresAt to expires
-      token: "sessionToken" // Map token to sessionToken
-    }
+    // Default Better Auth session fields will be used
   },
-  // Accounts configuration
+  // Accounts configuration (REMOVED fields mapping)
   accounts: {
-    // Map Supabase account fields to Better Auth fields if needed
-    fields: {
-      accountId: "providerAccountId",
-      refreshToken: "refresh_token",
-      accessToken: "access_token",
-      accessTokenExpiresAt: "access_token_expires",
-      idToken: "id_token",
-    }
+    // Default Better Auth account fields will be used
   }
 })
 
