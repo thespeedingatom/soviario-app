@@ -13,8 +13,8 @@ import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import type { Order, OrderItem } from "@/lib/db-service"
 import { fetchUserOrders } from "@/app/_actions/order-actions"
-import Image from "next/image"
-import QRCode from 'qrcode' // Import qrcode library
+// Remove unused Image and QRCode imports from here
+import { EsimInstallationDetails } from "@/components/esim-installation-details"; // Import the new component
 
 // Define type for processed eSIM data
 type EsimDisplayData = {
@@ -23,54 +23,15 @@ type EsimDisplayData = {
   name: string;
   status: Order["status"];
   activationCode?: string;
-  // qrCodeData is generated client-side now
+  manualCode?: string; // Add manualCode
+  smdpAddress?: string; // Add smdpAddress
   region?: string;
   data?: string;
   duration?: string;
   purchaseDate: string;
 }
 
-// Helper component to generate and display QR code client-side
-function QrCodeDisplay({ activationCode, orderId }: { activationCode: string; orderId: string }) {
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    QRCode.toDataURL(activationCode, { width: 200, margin: 1 })
-      .then(url => {
-        setQrCodeUrl(url);
-        setError(null);
-      })
-      .catch(err => {
-        console.error('QR code generation failed:', err);
-        setError('Could not generate QR code.');
-        setQrCodeUrl(null);
-      });
-  }, [activationCode]); // Re-generate if activationCode changes
-
-  if (error) {
-    return <p className="text-red-600 text-sm mt-2">{error}</p>;
-  }
-
-  if (!qrCodeUrl) {
-    return <p className="text-sm mt-2">Generating QR code...</p>;
-  }
-
-  return (
-    <div className="mt-4 text-center">
-      <p className="text-sm font-bold mb-2">Activation QR Code:</p>
-      <Image
-        src={qrCodeUrl}
-        alt={`eSIM QR Code for order ${orderId.slice(0, 8)}`}
-        width={200}
-        height={200}
-        className="mx-auto border-4 border-black p-1"
-      />
-      <p className="mt-2 text-xs font-mono break-all">Code: {activationCode}</p>
-    </div>
-  );
-}
-
+// Remove the old QrCodeDisplay component definition
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -107,6 +68,8 @@ export default function DashboardPage() {
                 name: item.name,
                 status: order.status,
                 activationCode: order.maya_esim_data?.activationCode,
+                manualCode: order.maya_esim_data?.manualCode, // Extract manualCode
+                smdpAddress: order.maya_esim_data?.smdpAddress, // Extract smdpAddress
                 region: item.region,
                 data: item.data,
                 duration: item.duration,
@@ -313,13 +276,20 @@ export default function DashboardPage() {
                            {esim.data && <div className="flex items-center gap-2"><BarChart className="h-4 w-4" /><span>{esim.data}</span></div>}
                            {esim.duration && <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>{esim.duration}</span></div>}
                            {esim.region && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{esim.region}</span></div>}
-                           <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
-                        </div>
-                        {esim.activationCode && (
-                          <QrCodeDisplay activationCode={esim.activationCode} orderId={esim.orderId} />
-                        )}
-                        <div className="mt-6">
-                          <Link href={`/dashboard/orders/${esim.orderId}`}>
+                            <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
+                         </div>
+                         {/* Replace QrCodeDisplay with EsimInstallationDetails */}
+                         {esim.activationCode && esim.manualCode && esim.smdpAddress && (
+                           <div className="mt-4"> {/* Add some margin */}
+                             <EsimInstallationDetails 
+                               activationCode={esim.activationCode} 
+                               manualCode={esim.manualCode} 
+                               smdpAddress={esim.smdpAddress} 
+                             />
+                           </div>
+                         )}
+                         <div className="mt-6">
+                           <Link href={`/dashboard/orders/${esim.orderId}`}>
                             <NeoButton className="w-full">View Order Details</NeoButton>
                           </Link>
                         </div>
@@ -402,17 +372,24 @@ export default function DashboardPage() {
                          <h3 className="text-xl font-bold">{esim.name}</h3>
                          {getStatusBadge(esim.status)}
                        </div>
-                       <div className="mt-4 space-y-2">
-                         {esim.data && <div className="flex items-center gap-2"><BarChart className="h-4 w-4" /><span>{esim.data}</span></div>}
-                         {esim.duration && <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>{esim.duration}</span></div>}
-                         {esim.region && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{esim.region}</span></div>}
-                         <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
-                       </div>
-                       {esim.activationCode && (
-                         <QrCodeDisplay activationCode={esim.activationCode} orderId={esim.orderId} />
-                       )}
-                       <div className="mt-6">
-                         <Link href={`/dashboard/orders/${esim.orderId}`}>
+                        <div className="mt-4 space-y-2">
+                          {esim.data && <div className="flex items-center gap-2"><BarChart className="h-4 w-4" /><span>{esim.data}</span></div>}
+                          {esim.duration && <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>{esim.duration}</span></div>}
+                          {esim.region && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{esim.region}</span></div>}
+                          <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>Purchased: {new Date(esim.purchaseDate).toLocaleDateString()}</span></div>
+                        </div>
+                         {/* Replace QrCodeDisplay with EsimInstallationDetails */}
+                         {esim.activationCode && esim.manualCode && esim.smdpAddress && (
+                           <div className="mt-4"> {/* Add some margin */}
+                             <EsimInstallationDetails 
+                               activationCode={esim.activationCode} 
+                               manualCode={esim.manualCode} 
+                               smdpAddress={esim.smdpAddress} 
+                             />
+                           </div>
+                         )}
+                        <div className="mt-6">
+                          <Link href={`/dashboard/orders/${esim.orderId}`}>
                            <NeoButton className="w-full">View Order Details</NeoButton>
                          </Link>
                        </div>

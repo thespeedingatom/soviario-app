@@ -1,4 +1,6 @@
 import { getMayaAuthHeader } from '@/lib/maya-auth'
+import { getProductBySlug } from '@/lib/db-products'; // Use getProductBySlug
+import { updateOrderWithEsimData } from '@/lib/db-service';
 
 const MAYA_API_BASE_URL = 'https://api.maya.net/connectivity/v1/account'
 
@@ -26,7 +28,7 @@ export async function getMayaProducts() {
 }
 
 // Refactored function to create an eSIM based on official docs
-export async function createMayaEsim(planTypeId: string) { // Renamed productId to planTypeId, removed email/region
+async function createMayaEsimApiCall(planTypeId: string) { // Renamed productId to planTypeId, removed email/region. Made internal as it's called by the main action.
   try {
     const url = `https://api.maya.net/connectivity/v1/esim`; // Correct endpoint
     
@@ -74,9 +76,45 @@ export async function createMayaEsim(planTypeId: string) { // Renamed productId 
 
   } catch (error) {
     console.error('Error creating Maya eSIM:', error);
-    throw new Error("Failed to create Maya eSIM")
+    throw new Error("Failed to create Maya eSIM") // Keep original error message
   }
 }
+
+/**
+ * Server Action to provision a Maya eSIM after an order is placed.
+ * Fetches local product info using its slug, calls Maya Create eSIM API, and updates the order record.
+ * @param orderId - The ID of the order in your database.
+ * @param productSlug - The slug of the product purchased.
+ */
+export async function provisionAndRecordMayaEsim(orderId: string, productSlug: string) {
+  console.log(`Starting Maya eSIM provisioning for Order ID: ${orderId}, Product Slug: ${productSlug}`);
+  try {
+    // 1. Fetch local product details using slug to get the Maya plan_type_id (policy_id)
+    const product = await getProductBySlug(productSlug); // Use getProductBySlug
+    if (!product || !product.policy_id) {
+      throw new Error(`Product details or Maya policy_id not found for Product Slug: ${productSlug}`);
+    }
+    const mayaPlanTypeId = product.policy_id.toString(); // Ensure it's a string if needed by API
+    console.log(`Found Maya Plan Type ID (policy_id): ${mayaPlanTypeId} for Product Slug: ${productSlug}`);
+
+    // 2. Call the Maya Create eSIM API
+    const esimDetails = await createMayaEsimApiCall(mayaPlanTypeId);
+    console.log(`Successfully created Maya eSIM (UID: ${esimDetails.esimUid}) for Order ID: ${orderId}`);
+
+    // 3. Update the order in your database with the eSIM details
+    const updatedOrder = await updateOrderWithEsimData(orderId, esimDetails);
+    console.log(`Successfully updated Order ID: ${orderId} with Maya eSIM data.`);
+
+    return { success: true, order: updatedOrder };
+
+  } catch (error) {
+    console.error(`Error in provisionAndRecordMayaEsim for Order ID ${orderId}:`, error);
+    // Optionally: Update order status to 'failed_provisioning' or similar
+    // await updateOrderStatus(orderId, 'failed'); 
+    return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred during eSIM provisioning." };
+  }
+}
+
 
 export async function getMayaProductById(id: string) {
   try {

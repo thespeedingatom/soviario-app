@@ -33,6 +33,7 @@ export type OrderItem = {
   region?: string
   data?: string
   duration?: string
+  slug?: string // Add slug field
 }
 
 export type PaymentMethod = {
@@ -78,6 +79,7 @@ export async function createOrder(userId: string, items: CartItem[], discount = 
     region: item.region,
     data: item.data,
     duration: item.duration,
+    slug: item.slug, // Map slug from CartItem (assuming CartItem has slug)
   }))
 
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems)

@@ -13,6 +13,7 @@ export type CartItem = {
   quantity: number
   region?: string
   data?: string
+  slug: string // Add slug property
 }
 
 type CartContextType = {
@@ -205,4 +206,3 @@ export const useCart = () => {
   }
   return context
 }
-

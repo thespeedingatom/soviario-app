@@ -97,6 +97,7 @@ export function ESIMCard({
               quantity: 1,
               region,
               data,
+              slug: id, // Pass the id prop as the slug
             })
           }
         >
@@ -107,4 +108,3 @@ export function ESIMCard({
     </NeoCard>
   )
 }
-
