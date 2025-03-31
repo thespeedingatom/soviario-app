@@ -1,11 +1,12 @@
 "use server"
 
-import { Resend } from "resend"
-import { render } from '@react-email/render'
-import QRCode from 'qrcode'
-import { MayaQRCode } from '@/emails/maya-qr-code'
+import { Resend } from "resend";
+import { render } from '@react-email/render';
+import QRCode from 'qrcode';
+// Use relative path instead of alias
+import { MayaQRCode } from '../emails/maya-qr-code'; 
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEsimEmail(
   email: string, 

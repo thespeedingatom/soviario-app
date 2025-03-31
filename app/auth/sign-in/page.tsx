@@ -10,20 +10,22 @@ import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoInput } from "@/components/ui/neo-input"
 import { NeoAlert } from "@/components/ui/neo-alert"
 import { Mail, Lock, LogIn, RefreshCw, AlertTriangle } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
-import { GoogleSignInButton } from "@/components/google-sign-in-button"
-import { toast } from "@/components/ui/use-toast"
+import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+// Remove getSupabaseBrowserClient import if only used for resend
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { toast } from "@/components/ui/use-toast";
 
 export default function SignInPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { signIn, user, isLoading: authLoading } = useAuth()
-  const isMounted = useRef(true)
-  const supabase = getSupabaseBrowserClient()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Import sendVerificationEmail from useAuth context
+  const { signIn, user, isPending: authLoading, sendVerificationEmail } = useAuth(); // Use isPending
+  const isMounted = useRef(true);
+  // Remove supabase client instance if only used for resend
+  // const supabase = getSupabaseBrowserClient() 
 
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -115,16 +117,14 @@ export default function SignInPage() {
   const handleResendVerification = async () => {
     if (!unconfirmedEmail) return
 
-    setIsResendingEmail(true)
+    setIsResendingEmail(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: unconfirmedEmail,
-      })
+      // Use the context function instead of direct Supabase call
+      const { error } = await sendVerificationEmail(unconfirmedEmail); 
 
-      if (error) throw error
+      if (error) throw error;
 
-      setSuccess("Verification email resent! Please check your inbox.")
+      setSuccess("Verification email resent! Please check your inbox.");
       setShowResendButton(false)
       toast({
         title: "Email Sent",
@@ -324,4 +324,3 @@ export default function SignInPage() {
     </div>
   )
 }
-

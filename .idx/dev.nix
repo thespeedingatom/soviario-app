@@ -8,6 +8,7 @@
     pkgs.python313
     pkgs.sudo
     pkgs.supabase-cli
+    pkgs.wrangler_1
     ];
   idx.extensions = [
  "saoudrizwan.claude-dev"];

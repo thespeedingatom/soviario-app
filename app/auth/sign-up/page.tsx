@@ -16,7 +16,7 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button"
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { signUp, user, isLoading: authLoading } = useAuth()
+  const { signUp, user, isPending: authLoading } = useAuth() // Use isPending
   const isMounted = useRef(true)
 
   const [firstName, setFirstName] = useState("")
@@ -88,11 +88,9 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      const { error: signUpError } = await signUp(email, password, {
-        first_name: firstName,
-        last_name: lastName,
-        full_name: `${firstName} ${lastName}`,
-      })
+      // Pass the full name as a single string, as expected by the context wrapper
+      const fullName = `${firstName} ${lastName}`.trim(); 
+      const { error: signUpError } = await signUp(email, password, fullName);
 
       if (signUpError) {
         throw signUpError
@@ -246,4 +244,3 @@ export default function SignUpPage() {
     </div>
   )
 }
-
