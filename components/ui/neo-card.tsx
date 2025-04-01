@@ -66,8 +66,7 @@ export function NeoCard({
     >
       {classified && (
         <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-bold text-white">
-          <Lock className="h-3 w-3" />
-          CLASSIFIED
+          POPULAR
         </div>
       )}
 

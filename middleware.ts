@@ -12,21 +12,17 @@ export async function middleware(request: NextRequest) {
     });
 
     // Check protected routes (matcher already filters, but good for fine-grained control within matched paths)
-    const isProtectedRoute = [
+    // Check protected UI routes (matcher already filters, but this provides fine-grained control)
+    const isProtectedUIRoute = [
       '/dashboard',
       '/checkout',
       '/account',
-      '/api/auth' // Keep this check, especially if some /api/auth routes should be public (like sign-in endpoint)
+      // NOTE: /api/auth/* is handled by the matcher, but we don't block it here based on cookie.
+      // The better-auth handler itself manages which of its routes require auth.
     ].some(path => request.nextUrl.pathname.startsWith(path))
 
-    // If the route isn't explicitly protected within the matched paths, allow access
-    // (e.g., allow access to /api/auth/sign-in even though it matches the broader /api/auth/* pattern)
-    if (!isProtectedRoute) {
-      return NextResponse.next()
-    }
-
-    // If the route IS protected and there's no session cookie, deny access
-    if (!sessionCookie) {
+    // If it's a protected UI route and there's no session cookie, redirect or deny access
+    if (isProtectedUIRoute && !sessionCookie) {
       // For API routes, return 401
       if (request.nextUrl.pathname.startsWith('/api')) {
         return new Response(

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { Globe, Wifi, CreditCard, Phone, MapPin, Clock } from "lucide-react"
 import { NeoCard } from "@/components/ui/neo-card"
+import { NeoCardPlain } from "@/components/ui/neo-card-plain"
+import { NeoCardCopy } from "@/components/ui/neo-card-copy"
 import { NeoButton } from "@/components/ui/neo-button"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { AnimatedText } from "@/components/animated-text"
