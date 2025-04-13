@@ -8,7 +8,7 @@ import { Menu } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { CartIcon } from "./cart-icon"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth } from "@/contexts/AuthContext" // Corrected import path
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -130,4 +130,3 @@ export default function Header() {
     </header>
   )
 }
-

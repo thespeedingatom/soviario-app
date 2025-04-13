@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/contexts/auth-context"
+import { AuthProvider } from "@/contexts/AuthContext"
 import { CartProvider } from "@/contexts/cart-context"
 import { Toaster } from "@/components/ui/toaster"
 

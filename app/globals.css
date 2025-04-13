@@ -2,49 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 
-  Combined from app/globals.css and styles/globals.css.
-  - All Tailwind layers and customizations merged.
-  - Duplicate @tailwind directives removed.
-  - All unique CSS variables and classes preserved.
-  - If you no longer need styles/globals.css, you can delete it.
-*/
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-/* Custom base variables from both files */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
 @layer base {
   :root {
-    /* From app/globals.css */
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
-
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-
-    --primary: 350 80% 55%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 60 80% 60%;
-    --secondary-foreground: 0 0% 10%;
-
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 40%;
-
-    --accent: 200 80% 60%;
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 80%;
-    --input: 0 0% 80%;
-    --ring: 0 0% 70%;
-
-    --radius: 0.5rem;
-
-    /* From styles/globals.css (additional/overlapping variables) */
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -68,6 +38,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -77,38 +48,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
   .dark {
-    /* From app/globals.css */
-    --background: 0 0% 10%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 15%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 350 70% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 60 70% 55%;
-    --secondary-foreground: 0 0% 10%;
-
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 70%;
-
-    --accent: 200 70% 50%;
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 0 74% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 30%;
-    --input: 0 0% 30%;
-    --ring: 0 0% 40%;
-
-    /* From styles/globals.css (additional/overlapping variables) */
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -144,68 +84,11 @@
   }
 }
 
-/* Font family from styles/globals.css */
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Shared base layer for border and body styles */
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-space font-bold;
-  }
-}
-
-/* Utility layer from styles/globals.css */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
-/* Components and custom classes from app/globals.css */
-@layer components {
-  .neobrutalist-border {
-    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .neobrutalist-button {
-    @apply bg-primary text-primary-foreground font-bold py-3 px-6 border-4 border-black;
-  }
-
-  .neobrutalist-button {
-    @apply shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .neobrutalist-button:hover {
-    @apply translate-y-1 translate-x-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .neobrutalist-button:active {
-    @apply translate-y-2 translate-x-2 shadow-none;
-  }
-
-  .neobrutalist-button {
-    @apply transition-all duration-200;
-  }
-
-  .neobrutalist-card {
-    @apply bg-card p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .neobrutalist-input {
-    @apply border-4 border-black bg-background px-4 py-3 w-full focus:outline-none focus:ring-0;
   }
 }
