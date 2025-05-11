@@ -9,65 +9,56 @@ import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoInput } from "@/components/ui/neo-input"
 import { NeoAlert } from "@/components/ui/neo-alert"
-import { Mail, Lock, LogIn, RefreshCw, AlertTriangle } from "lucide-react"
+import { LogIn, AlertTriangle } from "lucide-react"
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context";
-// Remove getSupabaseBrowserClient import if only used for resend
-import { GoogleSignInButton } from "@/components/google-sign-in-button";
-import { toast } from "@/components/ui/use-toast";
+// import { useAuth } from "@/contexts/auth-context"; // Removed useAuth
+// import { GoogleSignInButton } from "@/components/google-sign-in-button"; // Removed GoogleSignInButton
+// import { toast } from "@/components/ui/use-toast"; // Removed toast if not used elsewhere
 
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Import sendVerificationEmail from useAuth context
-  const { signIn, user, isPending: authLoading, sendVerificationEmail } = useAuth(); // Use isPending
   const isMounted = useRef(true);
-  // Remove supabase client instance if only used for resend
-  // const supabase = getSupabaseBrowserClient() 
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isResendingEmail, setIsResendingEmail] = useState(false)
-  const [showResendButton, setShowResendButton] = useState(false)
-  const [unconfirmedEmail, setUnconfirmedEmail] = useState("")
-  const [oauthError, setOauthError] = useState<string | null>(null)
+  // const [email, setEmail] = useState(""); // Removed
+  // const [password, setPassword] = useState("") // Removed
+  const [error, setError] = useState("") // Keep for general errors from Shopify redirect
+  const [success, setSuccess] = useState("") // Keep for messages like "check your email" if Shopify flow involves that
+  // const [isLoading, setIsLoading] = useState(false) // Removed, Shopify handles loading state on their page
+  // const [isResendingEmail, setIsResendingEmail] = useState(false) // Removed
+  // const [showResendButton, setShowResendButton] = useState(false) // Removed
+  // const [unconfirmedEmail, setUnconfirmedEmail] = useState("") // Removed
+  const [oauthError, setOauthError] = useState<string | null>(null) // Keep for OAuth specific errors
 
-  // Check if user is already logged in
+  // Check if user is already logged in (this will need to be adapted for Shopify auth)
+  // For now, this effect might not be fully functional until Shopify session check is in place
   useEffect(() => {
-    if (!authLoading && user) {
-      // Check if there's a redirect URL in the query parameters
-      const redirectTo = searchParams.get("redirect") || "/dashboard"
-      router.push(redirectTo)
-    }
+    // Placeholder: Add logic here to check Shopify session if needed on client-side
+    // e.g., by calling an API route that checks isAuthenticated() from shopify-auth.ts
+    // If logged in, redirect:
+    // const redirectTo = searchParams.get("redirect") || "/dashboard"
+    // router.push(redirectTo)
 
     return () => {
       isMounted.current = false
     }
-  }, [user, router, authLoading, searchParams])
+  }, [router, searchParams])
 
-  // Check for success message from registration or error from OAuth
+  // Check for error messages from Shopify redirect
   useEffect(() => {
-    const registered = searchParams.get("registered")
-    const error = searchParams.get("error")
+    const errorParam = searchParams.get("error")
+    const messageParam = searchParams.get("message") // For general messages
 
-    // Add this code to handle OAuth configuration errors
-    const isOAuthError = error === "oauth_config"
-
-    if (registered === "true") {
-      setSuccess("Registration successful! Please check your email to verify your account before signing in.")
-    }
-
-    if (error) {
-      const decodedError = decodeURIComponent(error)
+    if (errorParam) {
+      const decodedError = decodeURIComponent(errorParam)
       setError(decodedError)
-
-      // Check if it's an OAuth error
-      if (decodedError.includes("OAuth") || decodedError.includes("provider")) {
+      // You might want to categorize Shopify errors if they provide specific codes
+      if (decodedError.includes("OAuth") || decodedError.includes("access_denied") || decodedError.includes("configuration")) {
         setOauthError(decodedError)
       }
+    }
+    if (messageParam) {
+      setSuccess(decodeURIComponent(messageParam));
     }
 
     return () => {
@@ -75,75 +66,14 @@ export default function SignInPage() {
     }
   }, [searchParams])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setSuccess("")
-    setIsLoading(true)
-    setShowResendButton(false)
+  // Removed handleSubmit, handleResendVerification
 
-    try {
-      const { error: signInError, data } = await signIn(email, password)
+  const handleShopifySignIn = () => {
+    // Redirect to our backend API route that initiates Shopify login
+    router.push("/api/auth/shopify/login");
+  };
 
-      if (signInError) {
-        throw signInError
-      }
-
-      // If login is successful, get the redirect URL from query parameters or default to dashboard
-      const redirectTo = searchParams.get("redirect") || "/dashboard"
-      router.push(redirectTo)
-    } catch (err: any) {
-      console.error("Sign in error:", err)
-      if (isMounted.current) {
-        // Check if the error is about email confirmation
-        if (
-          err.message &&
-          (err.message.includes("Email not confirmed") || err.message.includes("Email link is invalid or has expired"))
-        ) {
-          setError("Your email has not been verified. Please check your inbox and click the verification link.")
-          setUnconfirmedEmail(email)
-          setShowResendButton(true)
-        } else {
-          setError(err.message || "Invalid email or password. Please try again.")
-        }
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false)
-      }
-    }
-  }
-
-  const handleResendVerification = async () => {
-    if (!unconfirmedEmail) return
-
-    setIsResendingEmail(true);
-    try {
-      // Use the context function instead of direct Supabase call
-      const { error } = await sendVerificationEmail(unconfirmedEmail); 
-
-      if (error) throw error;
-
-      setSuccess("Verification email resent! Please check your inbox.");
-      setShowResendButton(false)
-      toast({
-        title: "Email Sent",
-        description: "Verification email has been resent to your inbox.",
-      })
-    } catch (err: any) {
-      console.error("Error resending verification email:", err)
-      setError(`Failed to resend verification email: ${err.message}`)
-      toast({
-        title: "Error",
-        description: `Failed to resend verification email: ${err.message}`,
-        variant: "destructive",
-      })
-    } finally {
-      setIsResendingEmail(false)
-    }
-  }
-
-  const isOAuthError = searchParams.get("error") === "oauth_config"
+  const isOAuthError = searchParams.get("error") === "oauth_config"; // This specific error might change based on Shopify's responses
 
   return (
     <div className="flex flex-col">
@@ -186,44 +116,13 @@ export default function SignInPage() {
                   </div>
                 )}
 
-                {error && !oauthError && (
+                {/* Display general errors or OAuth specific errors */}
+                {(error || oauthError) && (
                   <div className="mt-6">
                     <NeoAlert variant="error" dismissible>
-                      {error}
-                      {showResendButton && (
-                        <div className="mt-2">
-                          <NeoButton
-                            onClick={handleResendVerification}
-                            disabled={isResendingEmail}
-                            size="sm"
-                            variant="outline"
-                          >
-                            {isResendingEmail ? (
-                              "Sending..."
-                            ) : (
-                              <>
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Resend Verification Email
-                              </>
-                            )}
-                          </NeoButton>
-                        </div>
-                      )}
+                      {oauthError || error}
                     </NeoAlert>
                   </div>
-                )}
-
-                {isOAuthError && (
-                  <NeoAlert variant="error" className="mb-4">
-                    There's an issue with the OAuth configuration. Please make sure Google OAuth is properly set up in
-                    your Supabase project.
-                  </NeoAlert>
-                )}
-
-                {error && !isOAuthError && (
-                  <NeoAlert variant="error" className="mb-4">
-                    Authentication failed. Please try again.
-                  </NeoAlert>
                 )}
 
                 {success && (
@@ -234,83 +133,25 @@ export default function SignInPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                  <NeoInput
-                    label="Email Address"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    inputClassName="pl-10"
-                  />
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                  </div>
-
-                  <NeoInput
-                    label="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    inputClassName="pl-10"
-                  />
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        className="h-4 w-4 border-2 border-black"
-                      />
-                      <label htmlFor="remember-me" className="ml-2 block text-sm">
-                        Remember me
-                      </label>
-                    </div>
-
-                    <div className="text-sm">
-                      <Link href="/auth/forgot-password" className="hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <NeoButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        "Signing in..."
-                      ) : (
-                        <>
-                          <LogIn className="mr-2 h-5 w-5" />
-                          Sign In
-                        </>
-                      )}
-                    </NeoButton>
-                  </div>
-                </form>
-
-                <div className="mt-6 relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                  </div>
+                <div className="mt-8">
+                  <NeoButton onClick={handleShopifySignIn} className="w-full">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Sign In / Sign Up with Shopify
+                  </NeoButton>
+                  <p className="mt-2 text-center text-sm text-muted-foreground">
+                    You will be redirected to Shopify to sign in or create an account.
+                    This may include options for email/password and Google Sign-In.
+                  </p>
                 </div>
-
-                <div className="mt-6">
-                  <GoogleSignInButton />
-                </div>
-
-                <div className="mt-6 text-center">
+                
+                {/* Removed email/password form and GoogleSignInButton */}
+                {/* The "Forgot password?" and "Sign up" links might be handled by Shopify's page */}
+                {/* Or you might need a separate flow for Shopify account recovery if not part of their page */}
+                <div className="mt-6 text-center text-sm">
                   <p>
-                    Don't have an account?{" "}
-                    <Link href="/auth/sign-up" className="font-bold hover:underline">
-                      Sign up
+                    Need help?{" "}
+                    <Link href="/contact" className="font-bold hover:underline">
+                      Contact Support
                     </Link>
                   </p>
                 </div>

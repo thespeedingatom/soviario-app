@@ -9,106 +9,42 @@ import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoInput } from "@/components/ui/neo-input"
 import { NeoAlert } from "@/components/ui/neo-alert"
-import { Mail, Lock, User, UserPlus } from "lucide-react"
+import { UserPlus } from "lucide-react" // Keep if used for the button icon
 import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
-import { GoogleSignInButton } from "@/components/google-sign-in-button"
+// import { useAuth } from "@/contexts/auth-context"; // Removed
+// import { GoogleSignInButton } from "@/components/google-sign-in-button"; // Removed
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { signUp, user, isPending: authLoading } = useAuth() // Use isPending
+  // const { user, isPending: authLoading } = useAuth(); // Removed, session check might be different
   const isMounted = useRef(true)
+  const [error, setError] = useState("") // Keep for potential errors passed via URL from Shopify
 
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Check if user is already logged in
+  // Check if user is already logged in (this will need to be adapted for Shopify auth)
+  // For now, this effect might not be fully functional until Shopify session check is in place
   useEffect(() => {
-    if (!authLoading && user) {
-      router.push("/dashboard")
+    // Placeholder: Add logic here to check Shopify session if needed on client-side
+    // e.g., by calling an API route that checks isAuthenticated() from shopify-auth.ts
+    // If logged in, redirect:
+    // router.push("/dashboard")
+
+    // Check for errors from Shopify redirect if any are relevant to sign-up
+    const searchParams = new URLSearchParams(window.location.search);
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
     }
 
     return () => {
       isMounted.current = false
     }
-  }, [user, router, authLoading])
+  }, [router])
 
-  const validateForm = () => {
-    if (!firstName.trim()) {
-      setError("First name is required")
-      return false
-    }
 
-    if (!lastName.trim()) {
-      setError("Last name is required")
-      return false
-    }
-
-    if (!email.trim()) {
-      setError("Email is required")
-      return false
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address")
-      return false
-    }
-
-    if (!password) {
-      setError("Password is required")
-      return false
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long")
-      return false
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return false
-    }
-
-    return true
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    if (!validateForm()) {
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      // Pass the full name as a single string, as expected by the context wrapper
-      const fullName = `${firstName} ${lastName}`.trim(); 
-      const { error: signUpError } = await signUp(email, password, fullName);
-
-      if (signUpError) {
-        throw signUpError
-      }
-
-      // Redirect to sign-in page with success message
-      router.push("/auth/sign-in?registered=true")
-    } catch (err: any) {
-      console.error("Sign up error:", err)
-      if (isMounted.current) {
-        setError(err.message || "Failed to create account. Please try again.")
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false)
-      }
-    }
-  }
+  const handleShopifySignUp = () => {
+    // Redirect to our backend API route that initiates Shopify login/signup
+    router.push("/api/auth/shopify/login");
+  };
 
   return (
     <div className="flex flex-col">
@@ -134,96 +70,15 @@ export default function SignUpPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                      <NeoInput
-                        label="First Name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                        inputClassName="pl-10"
-                      />
-                      <div className="relative">
-                        <User className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <NeoInput
-                        label="Last Name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                        inputClassName="pl-10"
-                      />
-                      <div className="relative">
-                        <User className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <NeoInput
-                    label="Email Address"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    inputClassName="pl-10"
-                  />
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                  </div>
-
-                  <NeoInput
-                    label="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    inputClassName="pl-10"
-                  />
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                  </div>
-
-                  <NeoInput
-                    label="Confirm Password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    inputClassName="pl-10"
-                  />
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                  </div>
-
-                  <div>
-                    <NeoButton type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        "Creating Account..."
-                      ) : (
-                        <>
-                          <UserPlus className="mr-2 h-5 w-5" />
-                          Create Account
-                        </>
-                      )}
-                    </NeoButton>
-                  </div>
-                </form>
-
-                <div className="mt-6 relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <GoogleSignInButton />
+                <div className="mt-8">
+                  <NeoButton onClick={handleShopifySignUp} className="w-full">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Create Account / Sign In with Shopify
+                  </NeoButton>
+                  <p className="mt-2 text-center text-sm text-muted-foreground">
+                    You will be redirected to Shopify to create an account or sign in.
+                    This may include options for email/password and Google Sign-In.
+                  </p>
                 </div>
 
                 <div className="mt-6 text-center">

@@ -9,7 +9,7 @@ import { ArrowRight, Lock } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
-interface NeoCardProps {
+interface NeoCardCopyProps { // Renamed from NeoCardProps
   title: string
   description?: string
   imageSrc?: string
@@ -22,7 +22,7 @@ interface NeoCardProps {
   children?: React.ReactNode
 }
 
-export function NeoCard({
+export function NeoCardCopy({ // Renamed from NeoCard
   title,
   description,
   imageSrc,
@@ -33,7 +33,7 @@ export function NeoCard({
   classified = false,
   className,
   children,
-}: NeoCardProps) {
+}: NeoCardCopyProps) { // Renamed from NeoCardProps
   const [isHovered, setIsHovered] = useState(false)
 
   const colorClasses = {
@@ -113,4 +113,3 @@ export function NeoCard({
     </motion.div>
   )
 }
-

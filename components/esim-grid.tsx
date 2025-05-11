@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import { NeoGrid } from "@/components/ui/neo-grid"
 import { ESIMCard } from "@/components/esim-card"
-import { fetchProductsByRegion, fetchFeaturedProducts, fetchAllProducts } from "@/app/_actions/product-actions"
-import type { Product } from "@/lib/db-products"
+// import { fetchProductsByRegion, fetchFeaturedProducts, fetchAllProducts } from "@/app/_actions/product-actions"
+import { fetchAllProducts } from "@/app/_actions/product-actions"; // fetchFeaturedProducts and fetchProductsByRegion are commented out
+import type { ShopifyProduct as Product } from "@/lib/shopify" // Use ShopifyProduct
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface ESIMGridProps {
@@ -23,23 +24,39 @@ export function ESIMGrid({ region = "all", limit, featured = false }: ESIMGridPr
       try {
         let data: Product[] = []
 
+        // if (featured) {
+        //   // data = await fetchFeaturedProducts() // Commented out as fetchFeaturedProducts is not implemented for Shopify
+        //   console.warn("Featured products functionality is temporarily disabled.");
+        //   data = await fetchAllProducts(); // Default to all products for now
+        // } else if (region === "all") {
+        //   data = await fetchAllProducts()
+        // } else if (region === "other") {
+        //   // For "other" region, get Japan and Australia products
+        //   // const japanProducts = await fetchProductsByRegion("Japan") // Commented out
+        //   // const australiaProducts = await fetchProductsByRegion("Australia") // Commented out
+        //   // data = [...japanProducts, ...australiaProducts] // Commented out
+        //   console.warn("Region 'other' functionality is temporarily disabled, fetching all products.");
+        //   data = await fetchAllProducts(); // Default to all products for now
+        // } else {
+        //   // Capitalize first letter for region
+        //   let formattedRegion = region.charAt(0).toUpperCase() + region.slice(1)
+        //   if (region.toLowerCase() === "usa") {
+        //     formattedRegion = "USA"
+        //   }
+        //   // data = await fetchProductsByRegion(formattedRegion) // Commented out
+        //   console.warn(`Region '${formattedRegion}' functionality is temporarily disabled, fetching all products.`);
+        //   data = await fetchAllProducts(); // Default to all products for now
+        // }
+        // Simplified logic: always fetch all products for now
+        data = await fetchAllProducts();
+        
         if (featured) {
-          data = await fetchFeaturedProducts()
-        } else if (region === "all") {
-          data = await fetchAllProducts()
-        } else if (region === "other") {
-          // For "other" region, get Japan and Australia products
-          const japanProducts = await fetchProductsByRegion("Japan")
-          const australiaProducts = await fetchProductsByRegion("Australia")
-          data = [...japanProducts, ...australiaProducts]
-        } else {
-          // Capitalize first letter for region
-          let formattedRegion = region.charAt(0).toUpperCase() + region.slice(1)
-          if (region.toLowerCase() === "usa") {
-            formattedRegion = "USA"
-          }
-          data = await fetchProductsByRegion(formattedRegion)
+            console.warn("Featured products filtering is not implemented for Shopify yet. Displaying all products.");
         }
+        if (region !== "all") {
+            console.warn(`Region-specific filtering for '${region}' is not implemented for Shopify yet. Displaying all products.`);
+        }
+
 
         if (limit) {
           data = data.slice(0, limit)
@@ -83,20 +100,19 @@ export function ESIMGrid({ region = "all", limit, featured = false }: ESIMGridPr
     <NeoGrid columns={3}>
       {products.map((product) => (
         <ESIMCard
-          key={product.id}
-          id={product.slug}
-          name={product.name}
-          duration={product.duration}
-          data={product.data_amount}
-          price={product.price}
+          key={product.id} // ShopifyProduct uses id
+          id={product.handle} // ShopifyProduct uses handle, equivalent to slug
+          name={product.title} // ShopifyProduct uses title
+          duration={"N/A"} // ShopifyProduct doesn't have duration, default or remove
+          data={"N/A"} // ShopifyProduct doesn't have data_amount, default or remove
+          price={parseFloat(product.price) || 0} // Convert string to number, default to 0 if NaN
           description={product.description}
-          countries={product.countries}
-          region={product.region}
-          color={product.color as any}
-          featured={product.is_featured}
+          countries={0} // ShopifyProduct doesn't have countries, default to 0
+          region={"N/A"} // ShopifyProduct doesn't have region, default or remove
+          color={"blue" as any} // ShopifyProduct doesn't have color, default or remove
+          featured={false} // ShopifyProduct doesn't have is_featured, default or remove
         />
       ))}
     </NeoGrid>
   )
 }
-

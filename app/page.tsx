@@ -7,8 +7,17 @@ import { NeoButton } from "@/components/ui/neo-button"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { AnimatedText } from "@/components/animated-text"
 import { ESIMGrid } from "@/components/esim-grid"
+import { getAllProducts } from "@/lib/shopify";
 
-export default function Home() {
+async function getProducts() {
+  const products = await getAllProducts();
+  console.log("Products:", products);
+  return products;
+}
+
+export default async function Home() {
+  await getProducts();
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -99,7 +108,7 @@ export default function Home() {
       </section>
 
       {/* Promo Banner */}
-      <NeoBanner color="primary">USE CODE "TRAVEL10" FOR 10% OFF YOUR FIRST ESIM PURCHASE</NeoBanner>
+      <NeoBanner color="blue">USE CODE "TRAVEL10" FOR 10% OFF YOUR FIRST ESIM PURCHASE</NeoBanner>
 
       {/* Features Section */}
       <section className="relative py-32 overflow-hidden">
@@ -276,4 +285,3 @@ export default function Home() {
     </div>
   )
 }
-

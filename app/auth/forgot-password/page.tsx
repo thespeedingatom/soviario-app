@@ -2,63 +2,47 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react" // Added useEffect
 import { NeoButton } from "@/components/ui/neo-button"
 import { NeoCardPlain } from "@/components/ui/neo-card-plain"
 import { NeoBanner } from "@/components/ui/neo-banner"
 import { NeoInput } from "@/components/ui/neo-input"
 import { NeoAlert } from "@/components/ui/neo-alert"
-import { Mail, ArrowLeft, Send } from "lucide-react"
+import { ArrowLeft, Info } from "lucide-react" // Replaced Send with Info
 import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
-import { useEffect } from "react"
+// import { useAuth } from "@/contexts/auth-context"; // Removed
+import { useRouter } from "next/navigation"; // Added for redirection
 
 export default function ForgotPasswordPage() {
-  const { resetPassword } = useAuth()
-  const isMounted = useRef(true)
+  // const { resetPassword } = useAuth(); // Removed
+  const router = useRouter(); // Added
+  const isMounted = useRef(true); // Keep if any async operations remain or for consistency
 
-  const [email, setEmail] = useState("")
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  // const [email, setEmail] = useState(""); // Removed
+  // const [isSubmitted, setIsSubmitted] = useState(false); // Removed
+  // const [isLoading, setIsLoading] = useState(false); // Removed
+  const [error, setError] = useState(""); // Keep for potential errors from Shopify redirect if relevant
 
   // Cleanup on unmount
   useEffect(() => {
+    // Check for errors from Shopify redirect if any are relevant
+    const searchParams = new URLSearchParams(window.location.search);
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
     return () => {
       isMounted.current = false
     }
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const { error: resetError } = await resetPassword(email)
-
-      if (resetError) {
-        throw resetError
-      }
-
-      if (isMounted.current) {
-        setIsSubmitted(true)
-      }
-    } catch (err: any) {
-      console.error("Password reset error:", err)
-      if (isMounted.current) {
-        setError(err.message || "An error occurred. Please try again.")
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false)
-      }
-    }
-  }
+  const redirectToShopifyLogin = () => {
+    router.push("/api/auth/shopify/login");
+  };
 
   return (
     <div className="flex flex-col">
-      <NeoBanner color="pink">PASSWORD RESET • ACCOUNT RECOVERY • SECURE ACCESS</NeoBanner>
+      <NeoBanner color="blue">PASSWORD RESET • ACCOUNT RECOVERY • SECURE ACCESS</NeoBanner>
 
       <section className="py-16">
         <div className="container">
@@ -82,57 +66,35 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
 
-                {isSubmitted ? (
-                  <div className="mt-8">
-                    <NeoAlert variant="success" title="Check Your Email">
-                      We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow
-                      the instructions to reset your password.
-                    </NeoAlert>
-
-                    <div className="mt-8 text-center">
-                      <Link href="/auth/sign-in">
-                        <NeoButton variant="outline">
-                          <ArrowLeft className="mr-2 h-5 w-5" />
-                          Back to Sign In
-                        </NeoButton>
-                      </Link>
+                <div className="mt-8 text-center">
+                  <NeoAlert variant="info" className="text-left">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-bold">Password Reset via Shopify</p>
+                        <p>
+                          To reset your password, please proceed to the Shopify sign-in page.
+                          You should find a "Forgot your password?" link there.
+                        </p>
+                      </div>
                     </div>
+                  </NeoAlert>
+
+                  <div className="mt-6">
+                    <NeoButton onClick={redirectToShopifyLogin} className="w-full">
+                      Proceed to Shopify Sign-In
+                    </NeoButton>
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                    <NeoInput
-                      label="Email Address"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      inputClassName="pl-10"
-                    />
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-[42px] h-5 w-5 text-gray-400" />
-                    </div>
 
-                    <div>
-                      <NeoButton type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          "Sending..."
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-5 w-5" />
-                            Send Reset Link
-                          </>
-                        )}
-                      </NeoButton>
-                    </div>
-
-                    <div className="text-center">
-                      <Link href="/auth/sign-in" className="text-sm hover:underline">
-                        <ArrowLeft className="mr-1 inline-block h-4 w-4" />
+                  <div className="mt-8">
+                    <Link href="/auth/sign-in">
+                      <NeoButton variant="outline">
+                        <ArrowLeft className="mr-2 h-5 w-5" />
                         Back to Sign In
-                      </Link>
-                    </div>
-                  </form>
-                )}
+                      </NeoButton>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </NeoCardPlain>
           </div>
@@ -143,4 +105,3 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-
