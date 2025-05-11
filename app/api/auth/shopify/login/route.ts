@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     // const customCallbackPath = searchParams.get('callback_path_after_shopify_redirect');
     
     // For now, using the default callback path defined in getShopifyLoginUrl
-    const loginUrl = getShopifyLoginUrl(); 
+    const loginUrl = await getShopifyLoginUrl(); 
     return NextResponse.redirect(loginUrl);
   } catch (error) {
     console.error('Error generating Shopify login URL:', error);
