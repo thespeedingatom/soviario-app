@@ -51,7 +51,7 @@ export async function generateNonce(length: number = 32): Promise<string> {
 }
 
 // For decoding JWT to verify nonce (simplified, consider a robust JWT library for production)
-export function decodeJwt(token: string): { header: any; payload: any; signature: string } | null {
+export async function decodeJwt(token: string): Promise<{ header: any; payload: any; signature: string } | null> {
   try {
     const [header, payload, signature] = token.split('.');
     if (!header || !payload || !signature) return null;

@@ -2,88 +2,111 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
   :root {
+    /* Neobrutalism color palette */
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --foreground: 0 0% 0%;
+
+    --card: 60 100% 98%;
+    --card-foreground: 0 0% 0%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 350 80% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 60 80% 60%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 200 80% 60%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.25rem;
+
+    /* Chart colors */
+    --chart-1: 350 80% 60%;
+    --chart-2: 60 80% 60%;
+    --chart-3: 200 80% 60%;
+    --chart-4: 120 70% 60%;
+    --chart-5: 270 70% 60%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 350 80% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 60 80% 60%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 0%;
+    --sidebar-ring: 0 0% 0%;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 350 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 60 70% 55%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 200 70% 50%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 74% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 80%;
+
+    /* Chart colors */
+    --chart-1: 350 70% 50%;
+    --chart-2: 60 70% 55%;
+    --chart-3: 200 70% 50%;
+    --chart-4: 120 60% 50%;
+    --chart-5: 270 60% 50%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 15%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 350 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 60 70% 55%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 0 0% 80%;
   }
 }
 
+/* Font family */
+body {
+  font-family: "Space Grotesk", Arial, Helvetica, sans-serif;
+}
+
+/* Base layer styles */
 @layer base {
   * {
     @apply border-border;
@@ -91,4 +114,630 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+}
+
+/* Utility layer */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Neobrutalism components */
+@layer components {
+  /* Base neobrutalism styles */
+  .neo-border {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .neo-border-lg {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* ShadcnUI Component Overrides for Neobrutalism */
+
+  /* Button */
+  .btn-neo {
+    border-width: 4px;
+    border-color: black;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    transition-property: all;
+    transition-duration: 200ms;
+  }
+
+  .btn-neo:hover {
+    @apply translate-y-1 translate-x-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .btn-neo:active {
+    @apply translate-y-2 translate-x-2 shadow-none;
+  }
+
+  /* Card */
+  .card-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Input */
+  .input-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .input-neo:focus {
+    @apply translate-y-1 translate-x-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Checkbox */
+  .checkbox-neo {
+    @apply border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Switch */
+  .switch-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .switch-thumb-neo {
+    @apply border-4 border-black;
+  }
+
+  /* Alert */
+  .alert-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Badge */
+  .badge-neo {
+    @apply border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Tabs */
+  .tabs-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .tab-neo {
+    @apply border-r-4 border-black last:border-r-0;
+  }
+
+  .tab-content-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 mt-4;
+  }
+
+  /* Dialog */
+  .dialog-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Popover */
+  .popover-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Tooltip */
+  .tooltip-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Select */
+  .select-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .select-content-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Accordion */
+  .accordion-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .accordion-item-neo {
+    @apply border-b-4 border-black last:border-b-0;
+  }
+
+  /* Slider */
+  .slider-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-8;
+  }
+
+  .slider-thumb-neo {
+    @apply border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] h-6 w-6;
+  }
+
+  /* Progress */
+  .progress-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-8;
+  }
+
+  /* Table */
+  .table-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .table-header-neo {
+    @apply border-b-4 border-black;
+  }
+
+  .table-cell-neo {
+    @apply border-r-4 border-black last:border-r-0;
+  }
+
+  .table-row-neo {
+    @apply border-b-4 border-black last:border-b-0;
+  }
+
+  /* Calendar */
+  .calendar-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .calendar-header-neo {
+    @apply border-b-4 border-black;
+  }
+
+  .calendar-day-neo {
+    @apply border-2 border-black;
+  }
+
+  /* Command */
+  .command-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Sheet */
+  .sheet-neo {
+    @apply border-l-4 border-black shadow-[8px_0px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Avatar */
+  .avatar-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Hover Card */
+  .hover-card-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Menubar */
+  .menubar-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .menubar-item-neo {
+    @apply border-r-4 border-black last:border-r-0;
+  }
+
+  /* Navigation Menu */
+  .nav-menu-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .nav-menu-item-neo {
+    @apply border-r-4 border-black last:border-r-0;
+  }
+
+  /* Scroll Area */
+  .scroll-area-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Separator */
+  .separator-neo {
+    @apply border-t-4 border-black;
+  }
+
+  /* Skeleton */
+  .skeleton-neo {
+    @apply border-4 border-black;
+  }
+
+  /* Toast */
+  .toast-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Toggle */
+  .toggle-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Textarea */
+  .textarea-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .textarea-neo:focus {
+    @apply translate-y-1 translate-x-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Radio Group */
+  .radio-neo {
+    @apply border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Context Menu */
+  .context-menu-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Dropdown Menu */
+  .dropdown-menu-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Collapsible */
+  .collapsible-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Alert Dialog */
+  .alert-dialog-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Form */
+  .form-neo {
+    @apply border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6;
+  }
+
+  /* Label */
+  .label-neo {
+    @apply font-bold;
+  }
+
+  /* Aspect Ratio */
+  .aspect-ratio-neo {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+}
+
+/* ShadcnUI Component Overrides */
+.btn {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  transition-property: all;
+  transition-duration: 200ms;
+}
+
+.btn:hover {
+  transform: translateY(1px) translateX(1px);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.btn:active {
+  transform: translateY(2px) translateX(2px);
+  box-shadow: none;
+}
+
+.card {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.input {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.input:focus {
+  transform: translateY(1px) translateX(1px);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.checkbox {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.switch {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.switch-thumb {
+  border-width: 4px;
+  border-color: black;
+}
+
+.alert {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.badge {
+  border-width: 2px;
+  border-color: black;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.tabs-list {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.tab {
+  border-right-width: 4px;
+  border-color: black;
+}
+
+.tab:last-child {
+  border-right-width: 0;
+}
+
+.tabs-content {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.dialog {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.popover-content {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.tooltip {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.select {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.select-content {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.accordion {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.accordion-item {
+  border-bottom-width: 4px;
+  border-color: black;
+}
+
+.accordion-item:last-child {
+  border-bottom-width: 0;
+}
+
+.slider {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  height: 2rem;
+}
+
+.slider-thumb {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.progress {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  height: 2rem;
+}
+
+.table {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.table-header {
+  border-bottom-width: 4px;
+  border-color: black;
+}
+
+.table-cell {
+  border-right-width: 4px;
+  border-color: black;
+}
+
+.table-cell:last-child {
+  border-right-width: 0;
+}
+
+.table-row {
+  border-bottom-width: 4px;
+  border-color: black;
+}
+
+.table-row:last-child {
+  border-bottom-width: 0;
+}
+
+.calendar {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.calendar-header {
+  border-bottom-width: 4px;
+  border-color: black;
+}
+
+.calendar-day {
+  border-width: 2px;
+  border-color: black;
+}
+
+.command {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.sheet {
+  border-left-width: 4px;
+  border-color: black;
+  box-shadow: 8px 0px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.avatar {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.hover-card {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.menubar {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.menubar-item {
+  border-right-width: 4px;
+  border-color: black;
+}
+
+.menubar-item:last-child {
+  border-right-width: 0;
+}
+
+.nav-menu {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.nav-menu-item {
+  border-right-width: 4px;
+  border-color: black;
+}
+
+.nav-menu-item:last-child {
+  border-right-width: 0;
+}
+
+.scroll-area {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.separator {
+  border-top-width: 4px;
+  border-color: black;
+}
+
+.skeleton {
+  border-width: 4px;
+  border-color: black;
+}
+
+.toast {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.toggle {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.textarea {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.textarea:focus {
+  transform: translateY(1px) translateX(1px);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.radio {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.context-menu {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.dropdown-menu {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.collapsible {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.alert-dialog {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.form {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  padding: 1.5rem;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.aspect-ratio {
+  border-width: 4px;
+  border-color: black;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
 }

@@ -21,6 +21,25 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/cart',
+        destination: '/', // Or '/plans'
+        permanent: true, 
+      },
+      {
+        source: '/auth/sign-in',
+        destination: '/', 
+        permanent: true,
+      },
+      {
+        source: '/auth/sign-up',
+        destination: '/',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 mergeConfig(nextConfig, userConfig)

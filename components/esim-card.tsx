@@ -3,7 +3,8 @@
 import { NeoCard } from "@/components/ui/neo-card"
 import { NeoButton } from "@/components/ui/neo-button"
 import { Wifi, Clock, MapPin, ShoppingCart } from "lucide-react"
-import { useCart } from "@/contexts/cart-context"
+import { useCartStore } from "../store/cart-store" // Changed to useCartStore
+import { CartItem } from "../types" // Import CartItem for type consistency
 
 interface ESIMCardProps {
   id: string
@@ -30,7 +31,7 @@ export function ESIMCard({
   color = "blue",
   featured = false,
 }: ESIMCardProps) {
-  const { addItem } = useCart()
+  const { addItem } = useCartStore()
 
   // Function to get the appropriate image based on region
   const getRegionImage = (region: string) => {
@@ -88,18 +89,20 @@ export function ESIMCard({
       <div className="mt-4">
         <NeoButton
           className="w-full"
-          onClick={() =>
-            addItem({
-              id,
-              name,
-              duration,
+          onClick={() => {
+            const cartItem: CartItem = {
+              id, // This should be the Shopify Variant ID
+              name: name || `${region} Plan`, // Ensure name is a string
               price,
               quantity: 1,
-              region,
+              duration,
               data,
-              slug: id, // Pass the id prop as the slug
-            })
-          }
+              // region is not part of CartItem in types.ts, so it's omitted here
+              // If region is needed in the cart, add it to CartItem type
+              // slug is also not part of CartItem
+            };
+            addItem(cartItem);
+          }}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
           Add to Cart

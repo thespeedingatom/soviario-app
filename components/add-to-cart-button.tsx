@@ -2,9 +2,10 @@
 
 import { ShoppingCart } from "lucide-react"
 import { NeoButton } from "@/components/ui/neo-button"
-import { useCart } from "@/contexts/cart-context"
+import { useCartStore } from "../store/cart-store" // Changed to useCartStore
+import { CartItem } from "../types" // Import CartItem for type consistency
 
-interface ProductData {
+interface ProductData { // This interface can be simplified or aligned with CartItem
   id: string
   name: string
   duration: string
@@ -23,18 +24,20 @@ interface AddToCartButtonProps {
 }
 
 export default function AddToCartButton({ product, buttonProps }: AddToCartButtonProps) {
-  const { addItem } = useCart()
+  const { addItem } = useCartStore()
 
   const handleAddToCart = () => {
-    addItem({
-      id: product.id,
+    const cartItem: CartItem = {
+      id: product.id, // This should be the Shopify Variant ID
       name: product.name,
-      duration: product.duration,
       price: product.price,
       quantity: 1,
-      region: product.region,
+      duration: product.duration,
       data: product.data,
-    })
+      // region is not part of CartItem in types.ts, so it's omitted here
+      // If region is needed in the cart, add it to CartItem type
+    };
+    addItem(cartItem)
   }
 
   return (
@@ -49,4 +52,3 @@ export default function AddToCartButton({ product, buttonProps }: AddToCartButto
     </NeoButton>
   )
 }
-

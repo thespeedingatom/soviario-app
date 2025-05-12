@@ -7,13 +7,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { CartIcon } from "./cart-icon"
-import { useAuth } from "@/contexts/auth-context"
+// import { CartIcon } from "./cart-icon" // Replaced with CartSheet
+import { CartSheet } from "./cart-sheet" // Added CartSheet
+import { AuthSheet } from "./auth-sheet" // Added AuthSheet
+import { useShopifyAuth } from "@/contexts/shopify-auth-context" // Use new Shopify auth hook
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, isLoading: isAuthLoading } = useShopifyAuth() // Get user and loading state
 
   const isActive = (path: string) => {
     return pathname === path
@@ -108,26 +110,25 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <CartIcon />
+          <CartSheet /> {/* Replaced CartIcon with CartSheet */}
 
           <ThemeToggle />
 
-          {user ? (
+          {isAuthLoading ? (
+            <Button variant="default" className="neobrutalist-button" disabled>
+              Loading...
+            </Button>
+          ) : user ? (
             <Link href="/dashboard">
               <Button variant="default" className="neobrutalist-button">
                 Dashboard
               </Button>
             </Link>
           ) : (
-            <Link href="/auth/sign-in">
-              <Button variant="default" className="neobrutalist-button">
-                Sign In
-              </Button>
-            </Link>
+            <AuthSheet /> // AuthSheet component handles its own trigger
           )}
         </div>
       </div>
     </header>
   )
 }
-
