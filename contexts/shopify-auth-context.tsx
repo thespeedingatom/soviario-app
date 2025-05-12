@@ -3,12 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
-  // Define your user object structure based on what /api/auth/shopify/session returns
-  // Example:
   id: string;
-  displayName?: string;
-  email?: string;
-  // Add other fields that your session endpoint might return
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  // Add other fields that your session endpoint might return,
+  // aligning with ShopifySessionData.customer
 }
 
 interface ShopifyAuthContextType {

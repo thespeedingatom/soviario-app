@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { NeoGrid } from "@/components/ui/neo-grid"
 import { ESIMCard } from "@/components/esim-card"
-// import { fetchProductsByRegion, fetchFeaturedProducts, fetchAllProducts } from "@/app/_actions/product-actions"
-import { fetchAllProducts } from "@/app/_actions/product-actions"; // fetchFeaturedProducts and fetchProductsByRegion are commented out
+import { getAllProducts } from "@/lib/shopify"; // Updated import
 import type { ShopifyProduct as Product } from "@/lib/shopify" // Use ShopifyProduct
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -48,7 +47,7 @@ export function ESIMGrid({ region = "all", limit, featured = false }: ESIMGridPr
         //   data = await fetchAllProducts(); // Default to all products for now
         // }
         // Simplified logic: always fetch all products for now
-        data = await fetchAllProducts();
+        data = await getAllProducts(); // Updated function name
         
         if (featured) {
             console.warn("Featured products filtering is not implemented for Shopify yet. Displaying all products.");
@@ -100,17 +99,22 @@ export function ESIMGrid({ region = "all", limit, featured = false }: ESIMGridPr
     <NeoGrid columns={3}>
       {products.map((product) => (
         <ESIMCard
-          key={product.id} // ShopifyProduct uses id
-          id={product.handle} // ShopifyProduct uses handle, equivalent to slug
-          name={product.title} // ShopifyProduct uses title
-          duration={"N/A"} // ShopifyProduct doesn't have duration, default or remove
-          data={"N/A"} // ShopifyProduct doesn't have data_amount, default or remove
-          price={parseFloat(product.price) || 0} // Convert string to number, default to 0 if NaN
+          key={product.id}
+          id={product.handle} // Corresponds to ESIMCard's 'id' prop for slug/handle
+          name={product.title}
+          // ESIMCardProps might need to be updated to accept ShopifyProduct structure more directly
+          // For now, mapping what we have:
+          price={parseFloat(product.price) || 0}
           description={product.description}
-          countries={0} // ShopifyProduct doesn't have countries, default to 0
-          region={"N/A"} // ShopifyProduct doesn't have region, default or remove
-          color={"blue" as any} // ShopifyProduct doesn't have color, default or remove
-          featured={false} // ShopifyProduct doesn't have is_featured, default or remove
+          // Props that ESIMCard might expect but ShopifyProduct doesn't directly provide without further mapping/logic:
+          duration={"N/A"} // Or derive from title/metafields if possible
+          data={product.dataAmount || "N/A"} // From metafield
+          region={product.region || "N/A"} // From metafield
+          // imageUrl={product.imageUrl} // ESIMCard does not accept imageUrl, removing for now.
+                                        // ESIMCard might have its own image logic or need this prop added.
+          countries={0} // Placeholder
+          color={"blue" as any} // Placeholder
+          featured={false} // Placeholder - determine from a collection or tag if needed
         />
       ))}
     </NeoGrid>

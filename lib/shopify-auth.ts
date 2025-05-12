@@ -161,7 +161,7 @@ export async function handleShopifyCallback(request: NextRequest): Promise<NextR
   try {
     const tokenRequestBody: Record<string, string> = {
       grant_type: 'authorization_code',
-      client_id: customerAccountClientId, // This should be the public client ID
+      client_id: customerAccountClientId!, // Added non-null assertion
       redirect_uri: `${siteUrl}/api/auth/shopify/callback`,
       code,
       code_verifier: codeVerifier,
@@ -190,7 +190,7 @@ export async function handleShopifyCallback(request: NextRequest): Promise<NextR
 
     // Verify nonce from id_token
     if (idToken && storedNonce) {
-      const decodedIdToken = decodeJwt(idToken);
+      const decodedIdToken = await decodeJwt(idToken); // Added await
       if (!decodedIdToken || decodedIdToken.payload.nonce !== storedNonce) {
         console.error("Nonce mismatch:", { storedNonce, idTokenNonce: decodedIdToken?.payload.nonce });
         // Decide if this is a hard failure. For now, log and continue.
@@ -271,7 +271,7 @@ export async function getAuthenticatedCustomer() {
   return {
     isLoggedIn: session.isLoggedIn,
     accessToken: session.accessToken, // Be careful exposing tokens to client-side
-    // customer: session.customer, // If stored
+    customer: session.customer, // Ensure customer data is returned
   };
 }
 
